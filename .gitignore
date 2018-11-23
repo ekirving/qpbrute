@@ -1,0 +1,22 @@
+# compiled python byte code
+*.pyc
+
+# R environment files
+.RData
+.Rhistory
+
+# output logging from nohup command
+nohup*
+
+# ignore log files
+*.log
+
+# temp files
+temp*
+tmp*
+stub*
+*tmp
+~*
+
+# ms output
+seedms

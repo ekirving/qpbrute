@@ -1,0 +1,8 @@
+indivname:       test/data/sim1.ind
+snpname:         test/data/sim1.snp
+genotypename:    test/data/sim1.geno
+outpop:          Out
+blgsize:         0.005
+lsqmode:         YES
+diag:            .0001
+hires:           YES
