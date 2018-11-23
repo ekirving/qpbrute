@@ -569,22 +569,3 @@ if __name__ == "__main__":
     permute_qpgraph(args.par, args.prefix, args.pops, args.out)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
-
-    # elif func == 'cluster':
-    #
-    #     # ---------------------
-    #     # -- CLUSTER_QPGRAPH --
-    #     # ---------------------
-    #     dot_path = 'qpgraph/dot/{0}.permute'.format(dataset)
-    #     log_file = 'qpgraph/{0}.{1}.cluster.log'.format(group, dataset)
-    #     csv_file = 'qpgraph/{0}.{1}.cluster.csv'.format(group, dataset)
-    #     mtx_file = 'qpgraph/{0}.{1}.cluster.npy'.format(group, dataset)
-    #     pdf_file = 'pdf/{0}.{1}.qpg-cluster.pdf'.format(group, dataset)
-    #
-    #     # find all the PDFs, and extract the graph names
-    #     files = glob.glob('pdf/{0}.{1}.qpg-permute-*'.format(group, dataset))
-    #     graph_names = [re.search(r'a[0-9]-(.+).pdf', file).group(1) for file in files]
-    #
-    #     cluster_qpgraph(graph_names, dot_path, log_file, pdf_file, csv_file, mtx_file, verbose=True, nthreads=CPU_CORES_MAX)
-    #
-    #     print "INFO: Cluster execution took: %s" % timedelta(seconds=time()-start)
