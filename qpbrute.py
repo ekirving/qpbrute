@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 # Build all possible graphs using a Randomised Stepwise Addition Order Algorithm w/ Branch and Bound.
-# Usage...
-# python -u qpbrute.py 1> permute-std.log 2> permute-err.log
 
 import re
 import sys
@@ -12,10 +10,15 @@ import itertools
 import hashlib
 import os
 import random
+import argparse
+
+from time import time
+from datetime import timedelta
+from collections import OrderedDict
+from cStringIO import StringIO
+from Bio import Phylo
 
 import xml.etree.ElementTree as ElemTree
-
-from collections import OrderedDict
 
 # use the Pathos library for improved multi-processing
 import pathos.multiprocessing as mp
@@ -25,17 +28,6 @@ from utils import run_cmd, pprint_qpgraph
 
 # import all the constants
 from consts import *
-
-from cStringIO import StringIO
-from Bio import Phylo
-
-
-# TODO improve parsimony...
-# on first pass, only allow non-admix insertion
-# if can't be added, then send to back of list
-# if it fails admix insertion (when it's turn comes up again)
-# then throw
-
 
 class PermuteQpgraph:
 
@@ -508,10 +500,14 @@ class NodeUnplaceable(Exception):
     pass
 
 
-def permute_qpgraph(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive=False, verbose=False, nthreads=1):
+def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX):
     """
     Find the best fitting graph for a given set of nodes, by permuting all possible graphs.
     """
+
+    log_file = prefix + '.log'
+    dot_path = 'graphs/' + prefix
+    pdf_path = 'pdf/' + prefix
 
     # clean up the log file
     if os.path.exists(log_file):
@@ -559,51 +555,21 @@ def permute_qpgraph(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exh
 
 if __name__ == "__main__":
 
-    from time import time
-    from datetime import timedelta
-
     start = time()
 
-    # if len(sys.argv) != 4:
-    #     print "Error: required params"
-    #     quit()
+    # parse the command line arguments
+    parser = argparse.ArgumentParser(description='Test all possible qpgraph models for a given set of populations.')
+    parser.add_argument("--par", help="Param file for qpGraph", metavar='example.par', required=True)
+    parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
+    parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
+    parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
+    args = parser.parse_args()
 
-    func = sys.argv[1]
-    # group = sys.argv[2]
-    # dataset = sys.argv[3]
+    # test all the models
+    permute_qpgraph(args.par, args.prefix, args.pops, args.out)
 
-    if func == 'simulated':
+    print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
 
-        # -------------------------
-        # -- SIMULATED TEST DATA --
-        # -------------------------
-        nodes = ['A', 'X', 'B', 'C']
-        outgroup = 'Out'
-        par_file = 'test/simulated.par'
-        log_file = 'test/simulated.log'
-        dot_path = 'test/graphs/sim'
-        pdf_path = 'test/pdf/sim'
-
-        permute_qpgraph(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX)
-
-        print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
-
-    # elif func == 'permute':
-    #
-    #     # ---------------------
-    #     # -- PERMUTE_QPGRAPH --
-    #     # ---------------------
-    #     nodes = GROUPS[dataset][group]
-    #     outgroup = OUTGROUP_POP[group] if group in OUTGROUP_POP else OUTGROUP_POP[dataset]
-    #     dot_path = 'qpgraph/dot/{0}.permute'.format(dataset)
-    #     par_file = 'qpgraph/{0}.{1}.permute.par'.format(group, dataset)
-    #     log_file = 'qpgraph/{0}.{1}.permute.log'.format(group, dataset)
-    #     pdf_path = 'pdf/{0}.{1}.qpg-permute'.format(group, dataset)
-    #
-    #     permute_qpgraph(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX)
-    #
-    #     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
-    #
     # elif func == 'cluster':
     #
     #     # ---------------------

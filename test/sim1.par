@@ -1,6 +1,6 @@
-indivname:       test/data/sim1.ind
-snpname:         test/data/sim1.snp
-genotypename:    test/data/sim1.geno
+indivname:       test/sim1.ind
+snpname:         test/sim1.snp
+genotypename:    test/sim1.geno
 outpop:          Out
 blgsize:         0.005
 lsqmode:         YES
