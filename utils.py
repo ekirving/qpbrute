@@ -74,7 +74,7 @@ def pprint_qpgraph(dot_file, pdf_file):
 
     # extract the leaf nodes from the body of the graph
     for line in dot:
-        match = re.search("^ +([a-z]+) +\[", line, re.IGNORECASE)
+        match = re.search("^ +([a-z_]+) +\[", line, re.IGNORECASE)
         if match:
             nodes.append(match.group(1))
 
