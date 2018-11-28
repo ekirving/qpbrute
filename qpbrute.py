@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Build all possible graphs using a Randomised Stepwise Addition Order Algorithm w/ Branch and Bound.
+# Build all possible graphs using a stepwise addition order algorithm, bounded by |Z| < 3
 
 import re
 import sys
@@ -29,7 +29,8 @@ from utils import run_cmd, pprint_qpgraph
 # import all the constants
 from consts import *
 
-class PermuteQpgraph:
+
+class QPBrute:
 
     # how many outliers should we allow before pruning a branch in graph space
     MAX_OUTLIER_THRESHOLD = 0
@@ -123,8 +124,8 @@ class PermuteQpgraph:
 
                 # add two admix nodes as the children of both targets
                 admix_nodes = [
-                    self.insert_node(new_tree, target1, admix_label, attrs={'internal': '1', 'admix': '1', 'side': 'l'}),
-                    self.insert_node(new_tree, target2, admix_label, attrs={'internal': '1', 'admix': '1', 'side': 'r'})
+                   self.insert_node(new_tree, target1, admix_label, attrs={'internal': '1', 'admix': '1', 'side': 'l'}),
+                   self.insert_node(new_tree, target2, admix_label, attrs={'internal': '1', 'admix': '1', 'side': 'r'})
                 ]
 
                 # choose the actual parent based on the sort order of the tag name (needed for unique tree hashing)
@@ -247,12 +248,12 @@ class PermuteQpgraph:
 
         return new_node
 
-    def run_qpgraph(self, args):
+    def run_qpgraph(self, params):
         """
         Run qpGraph on the given tree 
         """
         # extract the tuple of arguments
-        new_tree, depth = args
+        new_tree, depth = params
 
         # convert the tree to newick format
         newick = self.print_newick_tree(new_tree)
@@ -470,7 +471,7 @@ class PermuteQpgraph:
         if len(parent_node) == 0:
             return parent_node.tag
         else:
-            children = [(child_node.tag, PermuteQpgraph.export_newick_tree(child_node)) for child_node in parent_node]
+            children = [(child_node.tag, QPBrute.export_newick_tree(child_node)) for child_node in parent_node]
             children.sort()
             tag_name = '' if re.match('n[0-9]+|R', parent_node.tag) else parent_node.tag
             return '(' + ','.join(node for tag, node in children) + ')%s' % tag_name
@@ -514,7 +515,7 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
         os.remove(log_file)
 
     # instantiate the class
-    pq = PermuteQpgraph(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads)
+    pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads)
 
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
@@ -563,6 +564,7 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
+
     args = parser.parse_args()
 
     # test all the models

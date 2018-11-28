@@ -20,3 +20,6 @@ stub*
 
 # ms output
 seedms
+
+# ignore test data
+*pygmy*
