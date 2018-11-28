@@ -4,8 +4,13 @@
 import sys
 import csv
 import os
+import argparse
+import glob
+import re
 import numpy as np
 
+from time import time
+from datetime import timedelta
 from itertools import izip
 from cStringIO import StringIO
 
@@ -23,8 +28,11 @@ from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 from graph_tool import *
 from graph_tool.topology import *
 
+# import all the constants
+from consts import *
 
-class ClusterQpgraph():
+
+class ClusterQpgraph:
 
     def __init__(self, graph_names, log_file, dot_path, csv_file, mtx_file, verbose, nthreads):
         """
@@ -71,7 +79,7 @@ class ClusterQpgraph():
 
         return StringIO(text)
 
-    def calculate_distance(self, args):
+    def calculate_distance(self, params):
         """
         Calculate the similarity distance for two graphs.
 
@@ -79,7 +87,7 @@ class ClusterQpgraph():
         """
 
         # extract the tuple of arguments
-        i, j = args
+        i, j = params
 
         # calculate the distance scores between graph pairs (scores are not symmetric; i.e. A->B != B->A)
         d1 = similarity(self.graphs[i], self.graphs[j], distance=True)
@@ -149,10 +157,15 @@ class ClusterQpgraph():
         return dist_matrix
 
 
-def cluster_qpgraph(graph_names, dot_path, log_file, pdf_file, csv_file, mtx_file, verbose=False, nthreads=1):
+def cluster_qpgraph(graph_names, prefix, verbose=True, nthreads=CPU_CORES_MAX):
     """
     Compare all fitting graphs and compute the number of clusters.
     """
+    log_file = '{}.permute.log'.format(prefix)
+    dot_path = 'graphs/{}'.format(prefix)
+    csv_file = 'clusters/{).csv'.format(prefix)
+    mtx_file = 'qpgraph/{}.npy'.format(prefix)
+    pdf_file = 'pdf/{}.cluster.pdf'.format(prefix)
 
     # clean up the log file
     if os.path.exists(log_file):
@@ -170,17 +183,17 @@ def cluster_qpgraph(graph_names, dot_path, log_file, pdf_file, csv_file, mtx_fil
 
     # calculate the hierarchical clusters, using Ward's minimum variance method
     # https://en.wikipedia.org/wiki/Ward%27s_method
-    Z = linkage(dist_matrix, method='ward')
+    z = linkage(dist_matrix, method='ward')
 
     # print a dendrogram of the clusters
-    pprint_dendrogram(Z, truncate_mode='lastp', p=10, leaf_rotation=90.,
+    pprint_dendrogram(z, truncate_mode='lastp', p=10, leaf_rotation=90.,
                       leaf_font_size=12., show_contracted=True, pdf=pdf_file)
 
     cq.log("INFO: Printed hierarchical clustering dendrogram %s" % pdf_file)
 
     # automatically assign graphs to clusters
     # https://joernhees.de/blog/2015/08/26/scipy-hierarchical-clustering-and-dendrogram-tutorial/#Inconsistency-Method
-    clusters = fcluster(Z, t=10, criterion='inconsistent', depth=10)
+    clusters = fcluster(z, t=10, criterion='inconsistent', depth=10)
 
     cq.log("INFO: Found %s clusters using inconsistency criterion (t=%s)" % (len(set(clusters)), 10))
 
@@ -191,8 +204,6 @@ def cluster_qpgraph(graph_names, dot_path, log_file, pdf_file, csv_file, mtx_fil
             csv_writer.writerow([graph, cluster])
 
     cq.log("INFO: Saved clusters to file %s" % csv_file)
-
-
 
 
 def pprint_dendrogram(*args, **kwargs):
@@ -227,3 +238,22 @@ def pprint_dendrogram(*args, **kwargs):
     plt.savefig(pdf, format='pdf')
 
     return ddata
+
+
+if __name__ == "__main__":
+
+    start = time()
+
+    # parse the command line arguments
+    parser = argparse.ArgumentParser(description='Compare all fitting graphs and compute the number of clusters.')
+    parser.add_argument("--prefix", help="Output prefix used by qpBrute", metavar='example', required=True)
+
+    argv = parser.parse_args()
+
+    # find all the PDFs, and extract the graph names
+    files = glob.glob('pdf/{}*'.format(argv.prefix))
+    graphs = [re.search(r'a[0-9]-(.+).pdf', filename).group(1) for filename in files]
+
+    cluster_qpgraph(graphs, argv.prefix)
+
+    print "INFO: Cluster execution took: %s" % timedelta(seconds=time()-start)
