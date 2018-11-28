@@ -17,10 +17,6 @@ from cStringIO import StringIO
 # use the Pathos library for improved multi-processing
 import pathos.multiprocessing as mp
 
-# TODO this throws a warning...
-# import matplotlib
-# matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
@@ -32,7 +28,7 @@ from graph_tool.topology import *
 from consts import *
 
 
-class ClusterQpgraph:
+class QPCluster:
 
     def __init__(self, graph_names, log_file, dot_path, csv_file, mtx_file, verbose, nthreads):
         """
@@ -47,8 +43,6 @@ class ClusterQpgraph:
         self.nthreads = nthreads
 
         self.graphs = []
-
-        self.verbose = True
 
         # open the file for writing
         self.log_handle = open(log_file, 'a')
@@ -172,7 +166,7 @@ def cluster_qpgraph(graph_names, prefix, verbose=True, nthreads=CPU_CORES_MAX):
         os.remove(log_file)
 
     # instantiate the class
-    cq = ClusterQpgraph(graph_names, log_file, dot_path, csv_file, mtx_file, verbose, nthreads)
+    cq = QPCluster(graph_names, log_file, dot_path, csv_file, mtx_file, verbose, nthreads)
 
     cq.log("INFO: There are {:,} graphs to compare".format(len(set(graph_names))))
 
