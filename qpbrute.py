@@ -565,9 +565,9 @@ if __name__ == "__main__":
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
 
-    args = parser.parse_args()
+    argv = parser.parse_args()
 
     # test all the models
-    permute_qpgraph(args.par, args.prefix, args.pops, args.out)
+    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
