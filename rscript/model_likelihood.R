@@ -84,20 +84,24 @@ initial <- runif(length(mcmc$parameter_names))
 
 # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
 chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = 3, cores = 3,
-                                iterations = 1e2, verbose = TRUE)
+                                iterations = 1e6, verbose = FALSE)
 
-# save the chain (just in case we want it later)
+# save the chain (just in case we need it later)
 write.matrix(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain.mtx'), sep = "\t")
-
-# burn in and thin the chain
-thinned <- thinning(burn_in(chain, 4000), 100)
 
 # check ESS to make sure the MCMC has converged
 ess <- effectiveSize(subset(chain, select=-c(prior, likelihood, posterior)))
-print(ess)
 if (min(ess) < 100) {
-    stop(paste0("Minimum ESS is ", min(ess)))
+    # stop(paste0("Minimum ESS is ", min(ess)))
 }
+
+# TODO remove when done testing
+ess <- t(ess)
+row.names(ess) <- graph_code
+write.csv(ess, file=paste0('bayes/', prefix, '-', graph_code, '-ess.csv'))
+
+# burn in and thin the chain
+thinned <- thinning(burn_in(chain, 4000), 100)
 
 # save the thin chain
 write.matrix(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned.mtx'), sep = "\t")
