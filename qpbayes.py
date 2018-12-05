@@ -142,7 +142,7 @@ class QPBayes:
 
         if self.nthreads > 1:
             # compute the model likelihoods
-            pool = mp.ProcessingPool(self.nthreads)
+            pool = mp.ProcessingPool(self.nthreads / 3)
             pool.map(self.model_likelihood, self.graphs)
         else:
             # compute likelihoods without multi-threading
@@ -158,6 +158,8 @@ class QPBayes:
                  self.prefix,
                  graph,
                  self.csv_file])
+
+        self.log("INFO: Bayes factor done for graph {}".format(graph))
 
     def find_best_model(self):
         """
