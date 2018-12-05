@@ -13,4 +13,5 @@ rsync -avz --partial \
            --exclude '*tmp*' \
            --exclude '*.gz' \
            --exclude 'nohup*' \
+           --exclude 'graphs/*.log' \
            evan@palaeoprime:~/qpbrute/ ~/Dropbox/Code/qpbrute/

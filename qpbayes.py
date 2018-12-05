@@ -86,9 +86,8 @@ class QPBayes:
                 sample, gender, population = line.split()
                 samples[population].append(sample)
 
+        # compose the list of all 3-way tests (we're doing outgroup D-stats)
         tests = set()
-
-        # compose the list of all 4-way tests
         for x, y, z in itertools.permutations(self.nodes, 3):
             tests.add((self.outgroup, x, y, z))
 
@@ -162,9 +161,9 @@ def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=Tru
 if __name__ == "__main__":
     # parse the command line arguments
     parser = argparse.ArgumentParser(description='Compare all fitted models to each other using Bayes factors.')
-    parser.add_argument("--geno", help="Input genotype file (in eigenstrat format)", metavar='example.geno', required=True)
-    parser.add_argument("--snp", help="Input snp file (in eigenstrat format)", metavar='example.snp', required=True)
-    parser.add_argument("--ind", help="Input indiv file (in eigenstrat format)", metavar='example.ind', required=True)
+    parser.add_argument("--geno", help="Input genotype file (eigenstrat format)", metavar='example.geno', required=True)
+    parser.add_argument("--snp", help="Input snp file (eigenstrat format)", metavar='example.snp', required=True)
+    parser.add_argument("--ind", help="Input indiv file (eigenstrat format)", metavar='example.ind', required=True)
     parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
