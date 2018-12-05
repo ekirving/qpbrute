@@ -101,7 +101,8 @@ class QPBayes:
             "snpname:      {}".format(self.snp_file),
             "indivname:    {}".format(self.ind_file),
             "popfilename:  {}".format(self.tests_file),  # Program will run the method for all listed 4-way tests
-            "blgsize:      0.005"                   # TODO parameterise
+            "blgsize:      0.005"                        # TODO parameterise
+            "f4mode:       YES"                          # TODO f4 statistics not D-stats are computed
         ]
 
         # the params to be defined in a .par file
@@ -137,7 +138,13 @@ class QPBayes:
 
         self.log("INFO: There are {:,} graphs to compute Bayes factors for.".format(len(self.graphs)))
 
-        pass
+        # compute all the model likelihoods
+        for graph in self.graphs:
+            run_cmd(["Rscript",
+                     "rscript/model_likelihood.R",
+                     self.prefix,
+                     graph,
+                     self.csv_file])
 
 
 def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_MAX):

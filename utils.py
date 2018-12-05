@@ -7,7 +7,7 @@ import subprocess
 from consts import *
 
 
-def run_cmd(cmd, returnout=True, shell=False, verbose=False):
+def run_cmd(cmd, returnout=True, shell=False, verbose=True):
     """
     Executes the given command in a system subprocess
 

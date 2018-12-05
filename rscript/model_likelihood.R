@@ -1,54 +1,69 @@
 #!/usr/bin/env Rscript
-require(admixturegraph)
+library(admixturegraph)
 library(MASS)
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
-graph_file <- args[1]
-output_prefix <- args[2]
-dstat_file <- args[3]
+prefix <- args[1]
+graph_code <- args[2]
+csv_file <- args[3]
 
 # TODO remove when done testing
-setwd('/Users/Evan/Dropbox/Code/qpbrute')
-graph_file <- 'graphs/pygmyhog-1d9676e.graph'
-output_prefix <- 'pygmyhog'
-dstat_file <- 'dstats/pygmyhog.csv'
+# setwd('/Users/Evan/Dropbox/Code/qpbrute')
+# prefix <- 'pygmyhog'
+# graph_code <- '1d9676e'
+# csv_file <- 'dstats/pygmyhog.csv'
 
 # load the Dstat data
-dstats <- read.csv(dstat_file)
-dstats <- dstats[dstats$D > 0,] # drop negative results (because they are symetrical)
+dstats <- read.csv(csv_file)
+dstats <- dstats[dstats$D >= 0,] # drop negative results (because they are symetrical)
 
+# Convert qpGraph model to R format
 convert_qpgraph <- function(graph_file) {
-    # Convert qpGraph model to R format
+    leaves <- c()
+    nodes <- c()
+    edges <- c()
 
-    leaves <- c("SCWB", "NCWB", "LIB", "ISEA_SVSV", "EUWB", "AF")
-    inner_nodes <- c('R', 'a1', 'a1a', 'a1b', 'a2', 'a2a', 'a2b', 'a3', 'a3a', 'a3b',
-                     'n1', 'n2', 'n3', 'n4', 'n5', 'n6')
+    # load the graph into memory
+    fin <- file(graph_file, open="r")
+    lines <-readLines(fin)
+    close(fin)
 
-    edges <- parent_edges(c(edge('a3b', 'n6'), edge('LIB', 'a1'), edge('NCWB', 'n4'),
-                             edge('n4', 'n1'), edge('a2a', 'n5'), edge('a3a', 'a2'),
-                             edge('a1a', 'n2'), edge('SCWB', 'a2'), edge('AF', 'R'),
-                             edge('a1b', 'n5'), edge('EUWB', 'a3'), edge('n5', 'n3'),
-                             edge('n6', 'n2'), edge('n1', 'n6'), edge('n2', 'R'),
-                             edge('ISEA_SVSV', 'n3'), edge('n3', 'n1'), edge('a2b', 'n4'),
+    # iterate over each line
+    for (i in 1:length(lines)) {
+        line <- strsplit(lines[i], split="\t")[[1]]
 
-                            admixture_edge('a3', 'a3a', 'a3b'),
-                            admixture_edge('a2', 'a2a', 'a2b'),
-                            admixture_edge('a1', 'a1a', 'a1b')))
+        # process the different types of entries in the graph file
+        if (line[1] == 'root') {
+            nodes <- c(nodes, line[2])
+        } else if (line[1] == 'label') {
+            leaves <- c(leaves, line[2])
+        } else if (line[1] == 'edge') {
+            edges <- c(edges, edge(line[4], line[3]))
+            nodes <- c(nodes, line[4])
+        } else if (line[1] == 'admix') {
+            edges <- c(edges, admixture_edge(line[2], line[3], line[4]))
+            nodes <- c(nodes, line[2])
+        }
+    }
 
-    agraph(leaves, inner_nodes, edges)
+    # get all the inner nodes
+    inner_nodes <- setdiff(nodes, leaves)
+
+    # make the graph object
+    agraph(leaves, inner_nodes, parent_edges(edges))
 }
 
 # perform the conversion
-graph <- convert_qpgraph(graph_file)
+graph <- convert_qpgraph(paste0("graphs/", prefix, "-", graph_code, ".graph"))
 
 # plot the graph
-pdf(file=paste0('bayes/', output_prefix, '-graph.pdf'))
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-graph.pdf'))
 plot(graph)
 dev.off()
 
 # plot the D-stats
-pdf(file=paste0('bayes/', output_prefix, '-dstat.pdf'))
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-dstat.pdf'))
 plot(f4stats(dstats))
 dev.off()
 
@@ -56,7 +71,7 @@ dev.off()
 graph_fit <- fit_graph(dstats, graph)
 
 # plot the fit
-pdf(file=paste0('bayes/', output_prefix, '-fit.pdf'))
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
 plot(graph_fit)
 dev.off()
 
@@ -66,10 +81,10 @@ initial <- rep(0.5, length(mcmc$parameter_names))
 chain <- run_metropolis_hasting(mcmc, initial, iterations = 10000, verbose = TRUE)
 
 # save the chain (just in case we want it later)
-write.matrix(chain, file=paste0('bayes/', output_prefix, '-chain.mtx'), sep = "\t")
+write.matrix(chain, file=paste0('bayes/', prefix, "-", graph_code, '-chain.mtx'), sep = "\t")
 
 # burn in and thin the chain
 thinned <- thinning(burn_in(chain, 4000), 100)
 
 # save the thin chain
-write.matrix(thinned, file=paste0('bayes/', output_prefix, '-thinned.mtx'), sep = "\t")
+write.matrix(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned.mtx'), sep = "\t")
