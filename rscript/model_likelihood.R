@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 library(admixturegraph)
 library(MASS)
+library(coda)
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -11,7 +12,7 @@ csv_file <- args[3]
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
-# graph_code <- '1d9676e'
+# graph_code <- '501575a'
 # csv_file <- 'dstats/pygmyhog.csv'
 
 # load the Dstat data
@@ -75,18 +76,28 @@ pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
 plot(graph_fit)
 dev.off()
 
-# run the MCMC on the params
+# setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
-initial <- rep(0.5, length(mcmc$parameter_names))
-chain <- run_metropolis_hasting(mcmc, initial, iterations = 10000, verbose = TRUE)
 
-# TODO check ESS to make sure the MCMC has converged
+# choose some random starting values for the params
+initial <- runif(length(mcmc$parameter_names))
+
+# see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
+chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = 3, cores = 3,
+                                iterations = 1e2, verbose = TRUE)
 
 # save the chain (just in case we want it later)
-write.matrix(chain, file=paste0('bayes/', prefix, "-", graph_code, '-chain.mtx'), sep = "\t")
+write.matrix(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain.mtx'), sep = "\t")
 
 # burn in and thin the chain
 thinned <- thinning(burn_in(chain, 4000), 100)
+
+# check ESS to make sure the MCMC has converged
+ess <- effectiveSize(subset(chain, select=-c(prior, likelihood, posterior)))
+print(ess)
+if (min(ess) < 100) {
+    stop(paste0("Minimum ESS is ", min(ess)))
+}
 
 # save the thin chain
 write.matrix(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned.mtx'), sep = "\t")
