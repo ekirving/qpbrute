@@ -143,7 +143,7 @@ class QPBayes:
         if self.nthreads > 1:
             # compute the model likelihoods
             pool = mp.ProcessingPool(self.nthreads)
-            results = pool.map(self.model_likelihood, self.graphs)
+            pool.map(self.model_likelihood, self.graphs)
         else:
             # compute likelihoods without multi-threading
             for graph in self.graphs:
@@ -158,6 +158,14 @@ class QPBayes:
                  self.prefix,
                  graph,
                  self.csv_file])
+
+    def find_best_model(self):
+        """
+        Compare Bayes factors to find the best fitting model.
+        """
+        run_cmd(["Rscript",
+                 "rscript/bayes_factors.R",
+                 self.prefix])
 
 
 def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_MAX):
@@ -174,6 +182,9 @@ def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=Tru
 
     # calculate Bayes factors for all the fitted graphs, using the pre-computed D-stats
     qpb.calculate_bayes_factors()
+
+    # compare Bayes factors to find the best fitting model
+    qpb.find_best_model()
 
     qpb.log("INFO: Calculating Bayes factors took: {}".format(timedelta(seconds=time() - start)))
 
