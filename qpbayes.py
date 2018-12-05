@@ -16,6 +16,9 @@ from time import time
 from datetime import timedelta
 from collections import defaultdict
 
+# use the Pathos library for improved multi-processing
+import pathos.multiprocessing as mp
+
 # import the custom modules
 from utils import run_cmd
 
@@ -135,16 +138,26 @@ class QPBayes:
 
         See https://github.com/mailund/admixture_graph
         """
-
         self.log("INFO: There are {:,} graphs to compute Bayes factors for.".format(len(self.graphs)))
 
-        # compute all the model likelihoods
-        for graph in self.graphs:
-            run_cmd(["Rscript",
-                     "rscript/model_likelihood.R",
-                     self.prefix,
-                     graph,
-                     self.csv_file])
+        if self.nthreads > 1:
+            # compute the model likelihoods
+            pool = mp.ProcessingPool(self.nthreads)
+            results = pool.map(self.model_likelihood, self.graphs)
+        else:
+            # compute likelihoods without multi-threading
+            for graph in self.graphs:
+                self.model_likelihood(graph)
+
+    def model_likelihood(self, graph):
+        """
+        Run the MCMC to calculate the model likelihoods
+        """
+        run_cmd(["Rscript",
+                 "rscript/model_likelihood.R",
+                 self.prefix,
+                 graph,
+                 self.csv_file])
 
 
 def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_MAX):

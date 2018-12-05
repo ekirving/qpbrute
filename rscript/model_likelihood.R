@@ -80,6 +80,8 @@ mcmc <- make_mcmc_model(graph, dstats)
 initial <- rep(0.5, length(mcmc$parameter_names))
 chain <- run_metropolis_hasting(mcmc, initial, iterations = 10000, verbose = TRUE)
 
+# TODO check ESS to make sure the MCMC has converged
+
 # save the chain (just in case we want it later)
 write.matrix(chain, file=paste0('bayes/', prefix, "-", graph_code, '-chain.mtx'), sep = "\t")
 
