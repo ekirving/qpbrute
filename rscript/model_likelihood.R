@@ -16,7 +16,7 @@ csv_file <- args[3]
 
 # load the Dstat data
 dstats <- read.csv(csv_file)
-dstats <- dstats[dstats$D >= 0,] # drop negative results (because they are symetrical)
+dstats.pos <- dstats[dstats$D >= 0,] # drop negative results (because they are symetrical)
 
 # Convert qpGraph model to R format
 convert_qpgraph <- function(graph_file) {
@@ -42,7 +42,7 @@ convert_qpgraph <- function(graph_file) {
             edges <- c(edges, edge(line[4], line[3]))
             nodes <- c(nodes, line[4])
         } else if (line[1] == 'admix') {
-            edges <- c(edges, admixture_edge(line[2], line[3], line[4]))
+            edges <- c(edges, admixture_edge(line[2], line[3], line[4], line[2]))
             nodes <- c(nodes, line[2])
         }
     }
@@ -64,11 +64,11 @@ dev.off()
 
 # plot the D-stats
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-dstat.pdf'))
-plot(f4stats(dstats))
+plot(f4stats(dstats.pos))
 dev.off()
 
 # fit the graph
-graph_fit <- fit_graph(dstats, graph)
+graph_fit <- fit_graph(dstats.pos, graph)
 
 # plot the fit
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
