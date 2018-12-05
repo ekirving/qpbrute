@@ -5,6 +5,7 @@ library(stringr)
 library(ggplot2)
 library(reshape2)
 library(viridis)
+library(scales)
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -45,9 +46,11 @@ pdf(file=paste0('bayes/', prefix, "-heatmap.pdf"), width=9, height=7)
 ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
     geom_tile() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1),
-          axis.title.x=element_blank(),
-          axis.title.y=element_blank()) +
-    scale_fill_viridis(name = "Bayes factor", na.value = 'gainsboro')
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank()) +
+    scale_fill_viridis(name = "Bayes factor", na.value = 'gainsboro',
+                       # rescale the color palette so the zero threshold is obvious
+                       values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
 dev.off()
 
 # model_likelihood_n(thinned[, "likelihood"], 100)
