@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-require(admixturegraph)
+library(admixturegraph)
 library(gtools)
 library(stringr)
 library(ggplot2)
@@ -21,23 +21,30 @@ regx <- paste0(prefix, "-(.+)-thinned.mtx")
 
 # load all the thinned chains
 files <- list.files(path='bayes', pattern=regx, full.names=TRUE)
-chains <- lapply(files, function(x) data.matrix(read.csv(x, sep = "\t")))
 graphs <- str_match(files,regx)[,2]
-
-# make a matrix to hold all the pairwise combinations
-num_chains <- length(chains)
-perms <- permutations(num_chains, 2)
-mtx <- matrix(nrow=num_chains, ncol=num_chains)
-rownames(mtx) <- graphs
-colnames(mtx) <- graphs
+names(files) <- graphs
+chains <- lapply(files, function(x) data.matrix(read.csv(x, sep = "\t")))
 
 # compute the likelihoods for all models
 ll <- data.frame()
-for(i in 1:length(chains)) {
-    ll <- rbind(ll, model_likelihood_n(chains[[i]][, "likelihood"], 100))
+for(graph in graphs) {
+    ll <- rbind(ll, model_likelihood_n(chains[[graph]][,'likelihood'], 100))
 }
 rownames(ll) <- graphs
+
+# sort things by likelihood
+ll <- ll[order(-ll$mean),]
+chains <- chains[row.names(ll)]
+
+# save the model likelihoods
 write.csv(ll, file=paste0('bayes/', prefix, "-likelihood.csv"))
+
+# make a matrix to hold all the pairwise combinations
+num_chains <- length(chains)
+perms <- permutations(num_chains, 2, names(chains))
+mtx <- matrix(nrow=num_chains, ncol=num_chains)
+rownames(mtx) <- names(chains)
+colnames(mtx) <- names(chains)
 
 # compare the Bayes factors for all model pairs
 for(i in 1:nrow(perms)) {
@@ -48,10 +55,15 @@ for(i in 1:nrow(perms)) {
     mtx[x,y] <- bayes[,'mean']
 }
 
+# convert the data into the format geom_tile() requires
+melted_mtx <- melt(mtx)
+
 # we consider K > 150 to be very strong statistical support
 # see https://en.wikipedia.org/wiki/Bayes_factor#Interpretation
-melted_mtx <- melt(mtx)
 melted_mtx$value <- clamp(melted_mtx$value, lower=-150, upper=150)
+
+melted_mtx$Var1 <- factor(melted_mtx$Var1, levels=rev(names(chains)))
+melted_mtx$Var2 <- factor(melted_mtx$Var2, levels=names(chains))
 
 # plot the heatmap
 pdf(file=paste0('bayes/', prefix, "-heatmap.pdf"), width=9, height=7)
