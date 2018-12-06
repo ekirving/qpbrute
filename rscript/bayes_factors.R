@@ -17,27 +17,27 @@ prefix <- args[1]
 # prefix <- 'pygmyhog'
 
 # regex pattern for the MCMC chains
-regx <- paste0(prefix, "-(.+)-thinned.mtx")
+regx <- paste0(prefix, "-(.+)-thinned.csv")
 
 # load all the thinned chains
 files <- list.files(path='bayes', pattern=regx, full.names=TRUE)
 graphs <- str_match(files,regx)[,2]
 names(files) <- graphs
-chains <- lapply(files, function(x) data.matrix(read.csv(x, sep = "\t")))
+chains <- lapply(files, function(x) data.matrix(read.csv(x)))
 
 # compute the likelihoods for all models
 ll <- data.frame()
-for(graph in graphs) {
+for (graph in graphs) {
     ll <- rbind(ll, model_likelihood_n(chains[[graph]][,'likelihood'], 100))
 }
 rownames(ll) <- graphs
 
-# sort things by likelihood
+# reverse sort by likelihood
 ll <- ll[order(-ll$mean),]
 chains <- chains[row.names(ll)]
 
 # save the model likelihoods
-write.csv(ll, file=paste0('bayes/', prefix, "-likelihood.csv"))
+write.csv(ll, file=paste0('bayes/', prefix, "-likelihoods.csv"))
 
 # make a matrix to hold all the pairwise combinations
 num_chains <- length(chains)
@@ -50,18 +50,19 @@ colnames(mtx) <- names(chains)
 for(i in 1:nrow(perms)) {
     x <- perms[i,1]
     y <- perms[i,2]
-    bayes <- model_bayes_factor_n(chains[[x]][, "likelihood"],
+    K <- model_bayes_factor_n(chains[[x]][, "likelihood"],
                                   chains[[y]][, "likelihood"], 100)
-    mtx[x,y] <- bayes[,'mean']
+    mtx[x,y] <- K[,'mean']
 }
 
-# convert the data into the format geom_tile() requires
+# convert the matrix into the 3-column format required by geom_tile
 melted_mtx <- melt(mtx)
 
-# we consider K > 150 to be very strong statistical support
+# we consider K > 150 to be very strong statistical support, so cap at that threshold
 # see https://en.wikipedia.org/wiki/Bayes_factor#Interpretation
 melted_mtx$value <- clamp(melted_mtx$value, lower=-150, upper=150)
 
+# set the sort oder for the heatmap by reordering the factors
 melted_mtx$Var1 <- factor(melted_mtx$Var1, levels=rev(names(chains)))
 melted_mtx$Var2 <- factor(melted_mtx$Var2, levels=names(chains))
 

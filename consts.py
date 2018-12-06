@@ -14,3 +14,8 @@ CPU_CORES_MAX = int(TOTAL_CORES * 0.9)   # 90%
 # default colours for print the graphs
 COLOURS = ['#1f78b4', '#33a02c', '#e31a1c', '#ff7f00', '#6a3d9a', '#b15928', '#a6cee3', '#b2df8a', '#fb9a99', '#fdbf6f',
            '#cab2d6', '#ffff99']
+
+# config settings for the admixturegraph MCMC
+MCMC_NUM_TEMPS = 3
+MCMC_NUM_CORES = 3
+MCMC_NUM_ITERS = 1e5

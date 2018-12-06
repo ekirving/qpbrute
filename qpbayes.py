@@ -49,18 +49,18 @@ class QPBayes:
         self.graphs = [re.search(r'a[0-9]-(.+).pdf', pdf).group(1) for pdf in glob.glob('pdf/{}*'.format(prefix))]
 
         # self.dot_path = 'graphs/{}'.format(prefix)
-        self.par_file = "dstats/{}.par".format(prefix)
-        self.csv_file = "dstats/{}.csv".format(prefix)
-        self.dstat_file = "dstats/{}.log".format(prefix)
-        self.tests_file = "dstats/{}.tests".format(prefix)
-        self.log_file = '{}.bayes.log'.format(prefix)
+        self.dstat_par = "dstats/{}.par".format(prefix)
+        self.dstat_csv = "dstats/{}.csv".format(prefix)
+        self.dstat_log = "dstats/{}.log".format(prefix)
+        self.dstat_tests = "dstats/{}.tests".format(prefix)
+        self.bayes_log = '{}.bayes.log'.format(prefix)
 
         # clean up the log file
-        if os.path.exists(self.log_file):
-            os.remove(self.log_file)
+        if os.path.exists(self.bayes_log):
+            os.remove(self.bayes_log)
 
         # open the log file for writing
-        self.log_handle = open(self.log_file, 'a')
+        self.log_handle = open(self.bayes_log, 'a')
 
     def log(self, message):
         """
@@ -82,6 +82,10 @@ class QPBayes:
         See https://github.com/DReichLab/AdmixTools/blob/master/README.Dstatistics
         """
 
+        if os.path.isfile(self.dstat_csv):
+            # only run once
+            return
+
         # get all the samples, grouped by population
         samples = defaultdict(list)
         with open(self.ind_file, 'r') as fin:
@@ -95,7 +99,7 @@ class QPBayes:
             tests.add((self.outgroup, x, y, z))
 
         # write all the tests to disk
-        with open(self.tests_file, 'w') as fout:
+        with open(self.dstat_tests, 'w') as fout:
             fout.writelines(' '.join(test) + '\n' for test in tests)
 
         # compose the config settings
@@ -103,22 +107,22 @@ class QPBayes:
             "genotypename: {}".format(self.geno_file),
             "snpname:      {}".format(self.snp_file),
             "indivname:    {}".format(self.ind_file),
-            "popfilename:  {}".format(self.tests_file),  # Program will run the method for all listed 4-way tests
+            "popfilename:  {}".format(self.dstat_tests),  # Program will run the method for all listed 4-way tests
             "blgsize:      0.005"                        # TODO parameterise
             "f4mode:       YES"                          # TODO f4 statistics not D-stats are computed
         ]
 
         # the params to be defined in a .par file
-        with open(self.par_file, 'w') as fout:
+        with open(self.dstat_par, 'w') as fout:
             fout.write("\n".join(config))
 
         self.log("INFO: There are {:,} D-stat tests to compute for {} populations.".format(len(tests), len(self.nodes)))
 
         # run qpDstat
-        log = run_cmd(["qpDstat", "-p", self.par_file])
+        log = run_cmd(["qpDstat", "-p", self.dstat_par])
 
         # save the log file
-        with open(self.dstat_file, 'w') as fout:
+        with open(self.dstat_log, 'w') as fout:
             fout.write(log)
 
         results = list()
@@ -130,7 +134,7 @@ class QPBayes:
                 results.append(dict(zip(columns, line.split()[1:7])))
 
         # convert to DataFrame and save to disk
-        pd.DataFrame(results, columns=columns).to_csv(self.csv_file, index=False)
+        pd.DataFrame(results, columns=columns).to_csv(self.dstat_csv, index=False)
 
     def calculate_bayes_factors(self):
         """
@@ -142,7 +146,7 @@ class QPBayes:
 
         if self.nthreads > 1:
             # compute the model likelihoods
-            pool = mp.ProcessingPool(self.nthreads / 3)
+            pool = mp.ProcessingPool(self.nthreads / MCMC_NUM_CORES)
             pool.map(self.model_likelihood, self.graphs)
         else:
             # compute likelihoods without multi-threading
@@ -153,11 +157,16 @@ class QPBayes:
         """
         Run the MCMC to calculate the model likelihoods
         """
-        run_cmd(["Rscript",
-                 "rscript/model_likelihood.R",
-                 self.prefix,
-                 graph,
-                 self.csv_file])
+        if not os.path.isfile("bayes/{}-{}-thinned.csv".format(self.prefix, graph)):
+            # only run once
+            run_cmd(["Rscript",
+                     "rscript/model_likelihood.R",
+                     self.prefix,
+                     graph,
+                     self.dstat_csv,
+                     MCMC_NUM_TEMPS,
+                     MCMC_NUM_CORES,
+                     MCMC_NUM_ITERS])
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
