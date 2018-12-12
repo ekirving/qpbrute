@@ -89,19 +89,20 @@ initial <- runif(length(mcmc$parameter_names))
 
 chain.csv <- paste0('bayes/', prefix, '-', graph_code, '-chain.csv')
 
-# the MCMC can take a long time, so let's chunk it into 1k iterations
-num_chunks <- num_iters / 1e3
+# the MCMC can take a long time, so let's break it into chunks
+chunk_size <- 1e3
+num_chunks <- num_iters / chunk_size
 
 for (i in 1:num_chunks) {
     # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
     chunk <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
                                     cores = num_cores, iterations = chunk_size,
-                                    verbose = TRUE)
+                                    verbose = FALSE)
     # save the current chunk
     write.table(chunk, file=chain.csv, sep = ",", row.names = FALSE, col.names = (i == 1), append = (i != 1))
 
     # update the starting position
-    initial <- as.numeric(as.vector(tail(subset(chain, select=-c(prior, likelihood, posterior)), 1)))
+    initial <- as.numeric(as.vector(tail(subset(chunk, select=-c(prior, likelihood, posterior)), 1)))
 }
 
 # load the whole chain
