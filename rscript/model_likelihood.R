@@ -87,25 +87,29 @@ mcmc <- make_mcmc_model(graph, dstats)
 # choose some random starting values for the params
 initial <- runif(length(mcmc$parameter_names))
 
-# see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
-chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
-                                cores = num_cores, iterations = num_iters,
-                                verbose = FALSE)
+chain.csv <- paste0('bayes/', prefix, '-', graph_code, '-chain.csv')
 
-# save the chain (just in case we need it later)
-write.csv(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain.csv'))
+# the MCMC can take a long time, so let's chunk it into 1k iterations
+num_chunks <- num_iters / 1e3
 
-# check ESS to make sure the MCMC has converged
-ess <- effectiveSize(subset(chain, select=-c(prior, likelihood, posterior)))
-if (min(ess) < 100) {
-    # TODO FIXME
-    # stop(paste0("Minimum ESS is ", min(ess)))
+for (i in 1:num_chunks) {
+    # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
+    chunk <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
+                                    cores = num_cores, iterations = chunk_size,
+                                    verbose = TRUE)
+    # save the current chunk
+    write.table(chunk, file=chain.csv, sep = ",", row.names = FALSE, col.names = (i == 1), append = (i != 1))
+
+    # update the starting position
+    initial <- as.numeric(as.vector(tail(subset(chain, select=-c(prior, likelihood, posterior)), 1)))
 }
 
-# TODO remove when done testing
-ess <- t(ess)
-row.names(ess) <- graph_code
-write.csv(ess, file=paste0('bayes/', prefix, '-', graph_code, '-ess.csv'))
+# load the whole chain
+chain <- read.csv(file=chain.csv)
+
+# check ESS to make sure the MCMC has converged
+ess <- t(effectiveSize(subset(chain, select=-c(prior, likelihood, posterior))))
+write.csv(ess, file=paste0('bayes/', prefix, '-', graph_code, '-ess.csv'), row.names = FALSE)
 
 # burn in and thin the chain
 thinned <- thinning(burn_in(chain, 4000), 100)
