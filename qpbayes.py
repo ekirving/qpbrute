@@ -146,7 +146,7 @@ class QPBayes:
 
         if self.nthreads > 1:
             # compute the model likelihoods
-            pool = mp.ProcessingPool(self.nthreads / MCMC_NUM_CORES)
+            pool = mp.ProcessingPool(self.nthreads)
             pool.map(self.model_likelihood, self.graphs)
         else:
             # compute likelihoods without multi-threading
@@ -159,13 +159,13 @@ class QPBayes:
         """
         if not os.path.isfile("bayes/{}-{}-thinned.csv".format(self.prefix, graph)):
             # only run once
-            run_cmd(["Rscript",
+            run_cmd(["OMP_NUM_THREADS=1",
+                     "Rscript",
                      "rscript/model_likelihood.R",
                      self.prefix,
                      graph,
                      self.dstat_csv,
                      MCMC_NUM_TEMPS,
-                     MCMC_NUM_CORES,
                      MCMC_NUM_ITERS])
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))

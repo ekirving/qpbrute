@@ -8,8 +8,7 @@ prefix <- args[1]
 graph_code <- args[2]
 csv_file <- args[3]
 num_temps <- strtoi(args[4])
-num_cores <- strtoi(args[5])
-num_iters <- strtoi(args[6])
+num_iters <- strtoi(args[5])
 
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
@@ -17,7 +16,6 @@ num_iters <- strtoi(args[6])
 # graph_code <- '501575a'
 # csv_file <- 'dstats/pygmyhog.csv'
 # num_temps <- 3
-# num_cores <- 3
 # num_iters <- 1e5
 
 # load the Dstat data
@@ -96,8 +94,7 @@ num_chunks <- num_iters / chunk_size
 for (i in 1:num_chunks) {
     # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
     chunk <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
-                                    cores = num_cores, iterations = chunk_size,
-                                    verbose = FALSE)
+                                    iterations = chunk_size, verbose = FALSE)
     # save the current chunk
     write.table(chunk, file=chain.csv, sep = ",", row.names = FALSE, col.names = (i == 1), append = (i != 1))
 
