@@ -165,7 +165,7 @@ class QPBayes:
                      graph,
                      self.dstat_csv,
                      MCMC_NUM_TEMPS,
-                     MCMC_NUM_ITERS], env={'OMP_NUM_THREADS': 1})
+                     MCMC_NUM_ITERS], env={'OMP_NUM_THREADS': '1'})
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
