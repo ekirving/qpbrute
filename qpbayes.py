@@ -159,14 +159,13 @@ class QPBayes:
         """
         if not os.path.isfile("bayes/{}-{}-thinned.csv".format(self.prefix, graph)):
             # only run once
-            run_cmd(["OMP_NUM_THREADS=1",
-                     "Rscript",
+            run_cmd(["Rscript",
                      "rscript/model_likelihood.R",
                      self.prefix,
                      graph,
                      self.dstat_csv,
                      MCMC_NUM_TEMPS,
-                     MCMC_NUM_ITERS])
+                     MCMC_NUM_ITERS], env={'OMP_NUM_THREADS': 1})
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 

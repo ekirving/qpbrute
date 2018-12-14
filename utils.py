@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
 import subprocess
 
 # import all the constants
 from consts import *
 
 
-def run_cmd(cmd, returnout=True, shell=False, verbose=True):
+def run_cmd(cmd, returnout=True, shell=False, verbose=True, env=None):
     """
     Executes the given command in a system subprocess
 
@@ -15,6 +16,7 @@ def run_cmd(cmd, returnout=True, shell=False, verbose=True):
     :param returnout: Return stdout as a string
     :param shell: Use the native shell
     :param verbose: Print the command before execution
+    :param env: Optional dictionary of local environment settings
     :return: The stdout stream
     """
     # subprocess only accepts strings
@@ -24,8 +26,13 @@ def run_cmd(cmd, returnout=True, shell=False, verbose=True):
     if verbose:
         print(u' '.join(cmd))
 
+    # handle custom environment variables
+    local_env = os.environ
+    if env:
+        local_env.update(env)
+
     # run the command
-    proc = subprocess.Popen(cmd, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(cmd, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=local_env)
 
     # fetch the output and error
     (stdout, stderr) = proc.communicate()
@@ -39,7 +46,7 @@ def run_cmd(cmd, returnout=True, shell=False, verbose=True):
 
 
 def trim_ext(fullpath, n=1):
-    return ('.').join(fullpath.split('.')[:-n])
+    return '.'.join(fullpath.split('.')[:-n])
 
 
 def pprint_qpgraph(dot_file, pdf_file):
