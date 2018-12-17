@@ -13,10 +13,10 @@ num_iters <- strtoi(args[5])
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
-# graph_code <- '501575a'
+# graph_code <- '1d9676e'
 # csv_file <- 'dstats/pygmyhog.csv'
 # num_temps <- 3
-# num_iters <- 1e5
+# num_iters <- 1e6
 
 # load the Dstat data
 dstats <- read.csv(csv_file)
@@ -105,12 +105,19 @@ for (i in 1:num_chunks) {
 # load the whole chain
 chain <- read.csv(file=chain.csv)
 
-# check ESS to make sure the MCMC has converged
-ess <- t(effectiveSize(subset(chain, select=-c(prior, likelihood, posterior))))
-write.csv(ess, file=paste0('bayes/', prefix, '-', graph_code, '-ess.csv'), row.names = FALSE)
-
 # burn in and thin the chain
-thinned <- thinning(burn_in(chain, 4000), 100)
+thinned <- thinning(burn_in(chain, 10000), 100)
+mcmc.thin <- mcmc(thinned, start=10000, thin=100)
 
 # save the thin chain
 write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned.csv'))
+
+# compute the ESS and check convergence measures for the MCMC chain
+ess.thin <- t(effectiveSize(subset(thinned, select=-c(prior, likelihood, posterior))))
+write.csv(ess.thin, file=paste0('bayes/', prefix, '-', graph_code, '-ess.csv'), row.names = FALSE)
+
+# plot the trace
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace.pdf'))
+plot(mcmc.thin)
+dev.off()
+
