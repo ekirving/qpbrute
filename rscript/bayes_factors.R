@@ -16,14 +16,12 @@ prefix <- args[1]
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
 
-# regex pattern for the MCMC chains
-regx <- paste0(prefix, "-(.+)-thinned.csv")
-
 # load all the thinned chains
-files <- list.files(path='bayes', pattern=regx, full.names=TRUE)
-graphs <- str_match(files,regx)[,2]
-names(files) <- graphs
-chains <- lapply(files, function(x) data.matrix(read.csv(x)))
+mcmc.regex <- paste0(prefix, "-(.+)-thinned.csv")
+mcmc.files <- list.files(path='bayes', pattern=mcmc.regex, full.names=TRUE)
+graphs <- str_match(mcmc.files, mcmc.regex)[,2]
+names(mcmc.files) <- graphs
+chains <- lapply(mcmc.files, function(x) data.matrix(read.csv(x)))
 
 # compute the likelihoods for all models
 ll <- data.frame()
@@ -51,7 +49,7 @@ for(i in 1:nrow(perms)) {
     x <- perms[i,1]
     y <- perms[i,2]
     K <- model_bayes_factor_n(chains[[x]][, "likelihood"],
-                                  chains[[y]][, "likelihood"], 100)
+                              chains[[y]][, "likelihood"], 100)
     mtx[x,y] <- K[,'mean']
 }
 
