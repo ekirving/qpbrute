@@ -6,7 +6,7 @@ library(coda)
 args <- commandArgs(trailingOnly = TRUE)
 prefix <- args[1]
 graph_code <- args[2]
-csv_file <- args[3]
+dstats_file <- args[3]
 num_temps <- strtoi(args[4])
 num_iters <- strtoi(args[5])
 
@@ -14,12 +14,12 @@ num_iters <- strtoi(args[5])
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
 # graph_code <- '1d9676e'
-# csv_file <- 'dstats/pygmyhog.csv'
+# dstats_file <- 'dstats/pygmyhog.csv'
 # num_temps <- 3
 # num_iters <- 1e6
 
 # load the Dstat data
-dstats <- read.csv(csv_file)
+dstats <- read.csv(dstats_file)
 dstats.pos <- dstats[dstats$D >= 0,] # drop negative results (because they are symetrical)
 
 # Convert qpGraph model to R format
@@ -82,42 +82,87 @@ dev.off()
 # setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
 
-# choose some random starting values for the params
-initial <- runif(length(mcmc$parameter_names))
+# number of independent MCMC chains
+num_chains <- 2
 
-chain.csv <- paste0('bayes/', prefix, '-', graph_code, '-chain.csv')
+# make the run repeatable
+seed <- floor(runif(1, min=0, max=1e5))
+set.seed(seed)
 
-# the MCMC can take a long time, so let's break it into chunks
-chunk_size <- 1e3
-num_chunks <- num_iters / chunk_size
+# burn in by 10%
+burn <- num_iters * 0.1
 
-for (i in 1:num_chunks) {
+# thin to 1%
+thin <- 100
+
+print("Starting MCMC...")
+print(paste0("Graph code: ", graph_code))
+print(paste0("Num chains: ", num_chains))
+print(paste0("Num temperatures: ", num_temps))
+print(paste0("Num iterations: ", num_iters))
+print(paste0("Burn in: ", burn))
+print(paste0("Thin: ", thin))
+print(paste0("Random seed: ", seed))
+
+chains <- c()
+
+for (i in 1:num_chains) {
+    print(paste0("Starting chain: ", i))
+
+    # choose some random starting values for the params
+    initial <- runif(length(mcmc$parameter_names))
+
     # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
-    chunk <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
-                                    iterations = chunk_size, verbose = FALSE)
-    # save the current chunk
-    write.table(chunk, file=chain.csv, sep = ",", row.names = FALSE, col.names = (i == 1), append = (i != 1))
+    chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
+                                    iterations = num_iters, verbose = TRUE)
 
-    # update the starting position
-    initial <- as.numeric(as.vector(tail(subset(chunk, select=-c(prior, likelihood, posterior)), 1)))
+    print(paste0("Finished chain: ", i))
+
+    # save the full chain
+    write.csv(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'), row.names = FALSE)
+
+    # burn in and thin the chain
+    thinned <- thinning(burn_in(chain, burn), thin)
+    mcmc.thin <- mcmc(thinned, start=burn, thin=thin)
+
+    # save the thin chain
+    write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
+
+    # compute the ESS for the thinned chain
+    ess.thin <- t(effectiveSize(subset(thinned, select=-c(prior, likelihood, posterior))))
+    write.csv(ess.thin, file=paste0('bayes/', prefix, '-', graph_code, '-ess-', i, '.csv'), row.names = FALSE)
+
+    # plot the trace
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-', i, '.pdf'))
+    plot(mcmc.thin)
+    dev.off()
+
+    # add the chain to the list
+    chains[[i]] <- mcmc.thin
 }
 
-# load the whole chain
-chain <- read.csv(file=chain.csv)
+chains.all = mcmc.list(chains)
 
-# burn in and thin the chain
-thinned <- thinning(burn_in(chain, 10000), 100)
-mcmc.thin <- mcmc(thinned, start=10000, thin=100)
-
-# save the thin chain
-write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned.csv'))
-
-# compute the ESS and check convergence measures for the MCMC chain
-ess.thin <- t(effectiveSize(subset(thinned, select=-c(prior, likelihood, posterior))))
-write.csv(ess.thin, file=paste0('bayes/', prefix, '-', graph_code, '-ess.csv'), row.names = FALSE)
-
-# plot the trace
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace.pdf'))
-plot(mcmc.thin)
+# plot the combined traces
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-0.pdf'))
+plot(chains.all)
 dev.off()
 
+# plot the Gelman and Rubin's convergence diagnostic
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-gelman.pdf'))
+gelman.plot(chains.all)
+dev.off()
+
+# print some summary details
+print("Summary...")
+summary(chains.all)
+
+print("Acceptance Rate...")
+print(1 - rejectionRate(mcmc.thin))
+
+print("Effective Sample Size...")
+effectiveSize(chains.all)
+
+# NB. values substantially above 1 indicate lack of convergence.
+print("Gelman and Rubin's convergence diagnostic...")
+print(gelman.diag(chains.all))
