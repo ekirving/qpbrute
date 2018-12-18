@@ -7,15 +7,17 @@ args <- commandArgs(trailingOnly = TRUE)
 prefix <- args[1]
 graph_code <- args[2]
 dstats_file <- args[3]
-num_temps <- strtoi(args[4])
-num_iters <- strtoi(args[5])
+num_chains <- strtoi(args[4])
+num_temps <- strtoi(args[5])
+num_iters <- strtoi(args[6])
 
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
 # graph_code <- '1d9676e'
 # dstats_file <- 'dstats/pygmyhog.csv'
-# num_temps <- 3
+# num_chains <- 2
+# num_temps <- 10
 # num_iters <- 1e6
 
 # load the Dstat data
@@ -64,12 +66,12 @@ graph <- convert_qpgraph(paste0("graphs/", prefix, "-", graph_code, ".graph"))
 # plot the graph
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-graph.pdf'))
 plot(graph)
-dev.off()
+off <- dev.off()
 
 # plot the D-stats
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-dstat.pdf'))
 plot(f4stats(dstats.pos))
-dev.off()
+off <- dev.off()
 
 # fit the graph
 graph_fit <- fit_graph(dstats.pos, graph)
@@ -77,17 +79,10 @@ graph_fit <- fit_graph(dstats.pos, graph)
 # plot the fit
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
 plot(graph_fit)
-dev.off()
+off <- dev.off()
 
 # setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
-
-# number of independent MCMC chains
-num_chains <- 2
-
-# make the run repeatable
-seed <- floor(runif(1, min=0, max=1e5))
-set.seed(seed)
 
 # burn in by 10%
 burn <- num_iters * 0.1
@@ -95,19 +90,23 @@ burn <- num_iters * 0.1
 # thin to 1%
 thin <- 100
 
-print("Starting MCMC...")
-print(paste0("Graph code: ", graph_code))
-print(paste0("Num chains: ", num_chains))
-print(paste0("Num temperatures: ", num_temps))
-print(paste0("Num iterations: ", num_iters))
-print(paste0("Burn in: ", burn))
-print(paste0("Thin: ", thin))
-print(paste0("Random seed: ", seed))
+# make the run repeatable
+seed <- floor(runif(1, min=0, max=1e5))
+set.seed(seed)
+
+cat("Starting MCMC...\n")
+cat("Graph: ", graph_code, "\n")
+cat("Chains: ", num_chains, "\n")
+cat("Temps: ", num_temps, "\n")
+cat("Iters: ", num_iters, "\n")
+cat("Burn in: ", burn, "\n")
+cat("Thin: ", thin, "\n")
+cat("Seed: ", seed, "\n", "\n")
 
 chains <- c()
 
 for (i in 1:num_chains) {
-    print(paste0("Starting chain: ", i))
+    cat("Starting chain: ", i, "\n")
 
     # choose some random starting values for the params
     initial <- runif(length(mcmc$parameter_names))
@@ -115,8 +114,7 @@ for (i in 1:num_chains) {
     # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
     chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
                                     iterations = num_iters, verbose = TRUE)
-
-    print(paste0("Finished chain: ", i))
+    cat("\n")
 
     # save the full chain
     write.csv(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'), row.names = FALSE)
@@ -135,7 +133,7 @@ for (i in 1:num_chains) {
     # plot the trace
     pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-', i, '.pdf'))
     plot(mcmc.thin)
-    dev.off()
+    off <- dev.off()
 
     # add the chain to the list
     chains[[i]] <- mcmc.thin
@@ -146,23 +144,24 @@ chains.all = mcmc.list(chains)
 # plot the combined traces
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-0.pdf'))
 plot(chains.all)
-dev.off()
+off <- dev.off()
 
 # plot the Gelman and Rubin's convergence diagnostic
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-gelman.pdf'))
 gelman.plot(chains.all)
-dev.off()
+off <- dev.off()
 
 # print some summary details
-print("Summary...")
 summary(chains.all)
 
-print("Acceptance Rate...")
-print(1 - rejectionRate(mcmc.thin))
+# NB. ideal is 0.234
+cat("Acceptance Rate...\n")
+cat(1 - rejectionRate(mcmc.thin), "\n\n")
 
-print("Effective Sample Size...")
+cat("Effective Sample Size...\n")
 effectiveSize(chains.all)
+cat("\n")
 
 # NB. values substantially above 1 indicate lack of convergence.
-print("Gelman and Rubin's convergence diagnostic...")
-print(gelman.diag(chains.all))
+cat("Gelman and Rubin's convergence diagnostic...\n")
+cat(gelman.diag(chains.all))

@@ -458,7 +458,7 @@ class QPBrute:
         for i, old in enumerate(order):
             newick = newick.replace(old, 'n%s' % (i+1))
 
-        # replace n0 with a0 (to preseve the existing chache)
+        # replace n0 with a0 (to preseve the existing cache)
         newick = re.sub(r'n([0-9]+)', r'a\1', newick)
 
         return newick

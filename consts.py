@@ -16,5 +16,6 @@ COLOURS = ['#1f78b4', '#33a02c', '#e31a1c', '#ff7f00', '#6a3d9a', '#b15928', '#a
            '#cab2d6', '#ffff99']
 
 # config settings for the admixturegraph MCMC
-MCMC_NUM_TEMPS = 3
+MCMC_NUM_CHAINS = 2
+MCMC_NUM_TEMPS = 10
 MCMC_NUM_ITERS = int(1e6)
