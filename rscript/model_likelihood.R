@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 library(admixturegraph)
 library(coda)
+library(fitR)
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -84,12 +85,6 @@ off <- dev.off()
 # setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
 
-# burn in by 10%
-burn <- num_iters * 0.1
-
-# thin to 1%
-thin <- 100
-
 # make the run repeatable
 seed <- floor(runif(1, min=0, max=1e5))
 set.seed(seed)
@@ -114,26 +109,37 @@ for (i in 1:num_chains) {
     # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
     chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
                                     iterations = num_iters, verbose = TRUE)
-    cat("\n")
 
     # save the full chain
     write.csv(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'), row.names = FALSE)
 
-    # burn in and thin the chain
-    thinned <- thinning(burn_in(chain, burn), thin)
-    mcmc.thin <- mcmc(thinned, start=burn, thin=thin)
+    # convert to MCMC object
+    mcmc.chain <- mcmc(chain)
 
-    # save the thin chain
-    write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
+    # print the summary stats
+    summary(mcmc.chain)
 
-    # compute the ESS for the thinned chain
-    ess.thin <- t(effectiveSize(subset(thinned, select=-c(prior, likelihood, posterior))))
-    write.csv(ess.thin, file=paste0('bayes/', prefix, '-', graph_code, '-ess-', i, '.csv'), row.names = FALSE)
+    # check the acceptance rate (ideal is 0.234)
+    cat("\n", "Acceptance Rate...", "\n")
+    cat(1 - rejectionRate(mcmc.chain), "\n\n")
+
+    cat("Effective Sample Size...\n")
+    effectiveSize(mcmc.chain)
+    cat("\n")
 
     # plot the trace
     pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-', i, '.pdf'))
-    plot(mcmc.thin)
+    plot(mcmc.chain)
     off <- dev.off()
+
+    # plot ESS vs. burn-in
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'))
+    plotESSBurn(mcmc.chain)
+    off <- dev.off()
+
+    # burn in and thin the chain
+    chain.thin <- thinning(burn_in(chain, k=50000), k=10)
+    mcmc.thin <- mcmc(chain.thin, start=50000, thin=10)
 
     # add the chain to the list
     chains[[i]] <- mcmc.thin
@@ -153,10 +159,6 @@ off <- dev.off()
 
 # print some summary details
 summary(chains.all)
-
-# NB. ideal is 0.234
-cat("Acceptance Rate...\n")
-cat(1 - rejectionRate(mcmc.thin), "\n\n")
 
 cat("Effective Sample Size...\n")
 effectiveSize(chains.all)
