@@ -141,6 +141,9 @@ for (i in 1:num_chains) {
     chain.thin <- thinning(burn_in(chain, k=50000), k=10)
     mcmc.thin <- mcmc(chain.thin, start=50000, thin=10)
 
+    # save the thin chain
+    write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
+
     # add the chain to the list
     chains[[i]] <- mcmc.thin
 }
