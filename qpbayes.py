@@ -157,7 +157,7 @@ class QPBayes:
         """
         Run the MCMC to calculate the model likelihoods
         """
-        log_file = '{}-{}-likelihood.log'.format(self.prefix, graph)
+        log_file = 'bayes/{}-{}-likelihood.log'.format(self.prefix, graph)
 
         if not os.path.isfile("bayes/{}-{}-thinned-{}.csv".format(self.prefix, graph, MCMC_NUM_CHAINS)):
             # only run once
