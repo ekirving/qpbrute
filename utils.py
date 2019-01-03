@@ -8,14 +8,14 @@ import subprocess
 from consts import *
 
 
-def run_cmd(cmd, returnout=True, shell=False, verbose=True, env=None):
+def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None):
     """
     Executes the given command in a system subprocess
 
     :param cmd: The system command to run (list|string)
-    :param returnout: Return stdout as a string
     :param shell: Use the native shell
-    :param verbose: Print the command before execution
+    :param stdout: File handle to redirect stdout
+    :param stderr: File handle to redirect stderr
     :param env: Optional dictionary of local environment settings
     :return: The stdout stream
     """
@@ -23,26 +23,32 @@ def run_cmd(cmd, returnout=True, shell=False, verbose=True, env=None):
     cmd = [str(args) for args in cmd]
 
     # print the command
-    if verbose:
-        print(u' '.join(cmd))
+    print(u' '.join(cmd))
 
     # handle custom environment variables
     local_env = os.environ
     if env:
         local_env.update(env)
 
-    # run the command
-    proc = subprocess.Popen(cmd, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=local_env)
+    stdout = subprocess.PIPE if not stdout else stdout
+    stderr = subprocess.PIPE if not stderr else stderr
 
-    # fetch the output and error
-    (stdout, stderr) = proc.communicate()
+    # run the command
+    proc = subprocess.Popen(cmd, shell=shell, stdout=stdout, stderr=stderr, env=local_env)
+
+    # fetch any output and error
+    (out, err) = proc.communicate()
 
     # bail if something went wrong
-    if proc.returncode:
-        raise Exception(stderr)
+    if proc.returncode != 0:
 
-    if returnout:
-        return stdout
+        # decode return codes
+        if proc.returncode == 139:
+            err = 'Segmentation fault (core dumped) ' + err
+
+        raise RuntimeError(err)
+
+    return out
 
 
 def trim_ext(fullpath, n=1):

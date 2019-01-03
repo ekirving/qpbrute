@@ -15,5 +15,5 @@ rsync -avz --partial \
            --exclude '*.bak' \
            --exclude 'nohup*' \
            --exclude 'graphs/*.log' \
-           --exclude 'bayes/*-chain.csv' \
+           --exclude 'bayes/*-chain-*.csv' \
            evan@palaeoprime:~/qpbrute/ ~/Dropbox/Code/qpbrute/

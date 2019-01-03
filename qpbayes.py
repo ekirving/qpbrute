@@ -157,7 +157,9 @@ class QPBayes:
         """
         Run the MCMC to calculate the model likelihoods
         """
-        if not os.path.isfile("bayes/{}-{}-thinned.csv".format(self.prefix, graph)):
+        log_file = '{}-{}-likelihood.log'.format(self.prefix, graph)
+
+        if not os.path.isfile("bayes/{}-{}-thinned-{}.csv".format(self.prefix, graph, MCMC_NUM_CHAINS)):
             # only run once
             run_cmd(["Rscript",
                      "rscript/model_likelihood.R",
@@ -166,7 +168,7 @@ class QPBayes:
                      self.dstat_csv,
                      MCMC_NUM_CHAINS,
                      MCMC_NUM_TEMPS,
-                     MCMC_NUM_ITERS], env={'OMP_NUM_THREADS': '1'})
+                     MCMC_NUM_ITERS], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 

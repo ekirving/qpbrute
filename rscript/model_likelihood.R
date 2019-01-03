@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 library(admixturegraph)
 library(coda)
-library(fitR)
+library(fitR)  # see http://sbfnk.github.io/mfiidd/introduction.html
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -20,6 +20,9 @@ num_iters <- strtoi(args[6])
 # num_chains <- 2
 # num_temps <- 10
 # num_iters <- 1e6
+
+burn <- 50000
+thin <- 10
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)
@@ -138,8 +141,8 @@ for (i in 1:num_chains) {
     off <- dev.off()
 
     # burn in and thin the chain
-    chain.thin <- thinning(burn_in(chain, k=50000), k=10)
-    mcmc.thin <- mcmc(chain.thin, start=50000, thin=10)
+    chain.thin <- thinning(burn_in(chain, k=burn), k=thin)
+    mcmc.thin <- mcmc(chain.thin, start=burn, thin=thin)
 
     # save the thin chain
     write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
