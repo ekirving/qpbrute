@@ -15,7 +15,7 @@ num_iters <- strtoi(args[6])
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
-# graph_code <- '1d9676e'
+# graph_code <- 'test1'
 # dstats_file <- 'dstats/pygmyhog.csv'
 # num_chains <- 2
 # num_temps <- 10
@@ -145,7 +145,7 @@ for (i in 1:num_chains) {
     mcmc.thin <- mcmc(chain.thin, start=burn, thin=thin)
 
     # save the thin chain
-    write.csv(thinned, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
+    write.csv(mcmc.thin, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
 
     # add the chain to the list
     chains[[i]] <- mcmc.thin
