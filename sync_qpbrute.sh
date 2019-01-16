@@ -12,7 +12,7 @@ rsync -avz --partial \
            --exclude '*.old*' \
            --exclude '*tmp*' \
            --exclude '*.gz' \
-           --exclude '*.bak' \
+           --exclude '*.bak*' \
            --exclude 'nohup*' \
            --exclude 'graphs/*.log' \
            --exclude 'bayes/*-chain-*.csv' \

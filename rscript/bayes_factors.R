@@ -17,7 +17,7 @@ prefix <- args[1]
 # prefix <- 'pygmyhog'
 
 # load all the thinned chains
-mcmc.regex <- paste0(prefix, "-(.+)-thinned.csv")
+mcmc.regex <- paste0(prefix, "-(.+)-thinned-1.csv")  # TODO merge the two thin chains
 mcmc.files <- list.files(path='bayes', pattern=mcmc.regex, full.names=TRUE)
 graphs <- str_match(mcmc.files, mcmc.regex)[,2]
 names(mcmc.files) <- graphs
