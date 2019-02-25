@@ -22,6 +22,9 @@ num_iters <- strtoi(args[6])
 # num_iters <- 1e6
 
 burn <- 50000
+
+# default to 10% burn in and thinning
+burn <- num_iters / 10
 thin <- 10
 
 # load the Dstat data
@@ -88,7 +91,7 @@ off <- dev.off()
 # setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
 
-# make the run repeatable
+# make the run repeatable by setting a random seed
 seed <- floor(runif(1, min=0, max=1e5))
 set.seed(seed)
 
@@ -104,50 +107,67 @@ cat("Seed: ", seed, "\n", "\n")
 chains <- c()
 
 for (i in 1:num_chains) {
-    cat("Starting chain: ", i, "\n")
 
-    # choose some random starting values for the params
-    initial <- runif(length(mcmc$parameter_names))
+    fullchain.file = paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv')
 
-    # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
-    chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
-                                    iterations = num_iters, verbose = TRUE)
+    # don't rerun completed chains
+    if (file.exists(fullchain.file)) {
+        cat("Loading chain: ", i, "\n")
 
-    # save the full chain
-    write.csv(chain, file=paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'), row.names = FALSE)
+        chain <- read.csv(fullchain.file)
+
+    } else {
+        cat("Starting chain: ", i, "\n")
+
+        # choose some random starting values for the params
+        initial <- runif(length(mcmc$parameter_names))
+
+        # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
+        chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
+                                        iterations = num_iters, verbose = TRUE)
+
+        # save the full chain
+        write.csv(chain, file=fullchain.file, row.names = FALSE)
+    }
 
     # convert to MCMC object
     mcmc.chain <- mcmc(chain)
 
-    # print the summary stats
-    summary(mcmc.chain)
-
     # check the acceptance rate (ideal is 0.234)
-    cat("\n", "Acceptance Rate...", "\n")
-    cat(1 - rejectionRate(mcmc.chain), "\n\n")
-
-    cat("Effective Sample Size...\n")
-    effectiveSize(mcmc.chain)
-    cat("\n")
-
-    # plot the trace
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-', i, '.pdf'))
-    plot(mcmc.chain)
-    off <- dev.off()
+    cat("Acceptance Rate...", "\n")
+    print(1 - rejectionRate(mcmc.chain))
 
     # plot ESS vs. burn-in
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'))
-    plotESSBurn(mcmc.chain)
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
+    plotESSBurn(mcmc.chain, step.size=burn/2)
     off <- dev.off()
 
+    cat("Thinning chain: ", i, "\n")
+
     # burn in and thin the chain
-    chain.thin <- thinning(burn_in(chain, k=burn), k=thin)
+    chain.thin <- thinning(burn_in(mcmc.chain, k=burn), k=thin)
     mcmc.thin <- mcmc(chain.thin, start=burn, thin=thin)
 
     # save the thin chain
     write.csv(mcmc.thin, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
 
-    # add the chain to the list
+    # print the summary stats
+    print(summary(mcmc.thin))
+
+    cat("Effective Sample Size...\n")
+    print(effectiveSize(mcmc.thin))
+    cat("\n")
+
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-autocorr-', i, '.pdf'))
+    autocorr.plot(mcmc.thin)
+    off <- dev.off()
+
+    # plot the trace
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-', i, '.pdf'))
+    plot(mcmc.thin)
+    off <- dev.off()
+
+    # add the thinnned chain to the list
     chains[[i]] <- mcmc.thin
 }
 
@@ -158,18 +178,18 @@ pdf(file=paste0('bayes/', prefix, "-", graph_code, '-trace-0.pdf'))
 plot(chains.all)
 off <- dev.off()
 
-# plot the Gelman and Rubin's convergence diagnostic
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-gelman.pdf'))
-gelman.plot(chains.all)
-off <- dev.off()
-
 # print some summary details
-summary(chains.all)
+cat(summary(chains.all))
 
 cat("Effective Sample Size...\n")
-effectiveSize(chains.all)
+cat(effectiveSize(chains.all))
 cat("\n")
 
 # NB. values substantially above 1 indicate lack of convergence.
 cat("Gelman and Rubin's convergence diagnostic...\n")
-cat(gelman.diag(chains.all))
+print(gelman.diag(chains.all))
+
+# plot the Gelman and Rubin's convergence diagnostic
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-gelman.pdf'))
+gelman.plot(chains.all)
+off <- dev.off()

@@ -23,3 +23,5 @@ seedms
 
 # ignore test data
 *pygmy*
+*Rproj*
+Rplot*
