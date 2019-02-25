@@ -202,4 +202,4 @@ off <- dev.off()
 
 # NB. values substantially above 1 indicate lack of convergence.
 cat("Gelman and Rubin's convergence diagnostic.", "\n")
-print(gelman.diag(chains.all))
+print(gelman.diag(chains.all), multivariate=FALSE)
