@@ -1,7 +1,8 @@
 #!/usr/bin/env Rscript
 library(admixturegraph, quietly=T)
 library(coda, quietly=T)
-library(fitR, quietly=T)  # see http://sbfnk.github.io/mfiidd/introduction.html
+library(fitR, quietly=T)
+library(data.table, quietly=T)
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -36,7 +37,7 @@ convert_qpgraph <- function(graph_file) {
 
     # load the graph into memory
     fin <- file(graph_file, open="r")
-    lines <-readLines(fin)
+    lines <- readLines(fin)
     close(fin)
 
     # iterate over each line
@@ -113,7 +114,7 @@ run_chain <- function(i, num_iters) {
     if (file.exists(fullchain.file)) {
 
         cat("Loading chain: ", i, "\n")
-        chain.prev <- read.csv(fullchain.file)
+        chain.prev <- fread(fullchain.file, header = T, sep = ',')
         row.count <- nrow(chain.prev)
 
         if (row.count == num_iters) {
@@ -155,8 +156,10 @@ run_chain <- function(i, num_iters) {
     # merge any old and new chains
     chain <- rbind(chain.prev, chain.new)
 
-    # save the full chain
-    write.csv(chain, file=fullchain.file, row.names = FALSE)
+    if (!is.null(chain.new)) {
+        # save the full chain
+        write.csv(chain, file=fullchain.file, row.names = FALSE)
+    }
 
     # convert to MCMC object and return
     mcmc(chain)
