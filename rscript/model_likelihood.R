@@ -200,9 +200,9 @@ for (i in 1:num_chains) {
     plotESSBurn(mcmc.chain, step.size=round(burn/2, 0))
     off <- dev.off()
 
-    cat("Plotting autocorrelation.\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-autocorr-', i, '.pdf'))
-    autocorr.plot(mcmc.burn)
+    cat("Plotting thinned autocorrelation.\n\n")
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-thin-autocorr-', i, '.pdf'))
+    autocorr.plot(thinning(mcmc.burn, k=1000), lag.max=50)
     off <- dev.off()
 
     cat("Plotting the trace.\n\n")
@@ -226,11 +226,6 @@ print(summary(chains.all))
 cat("Effective Sample Size.\n")
 print(effectiveSize(chains.all))
 cat("\n")
-
-cat("Plotting autocorrelation.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-autocorr-0.pdf'))
-autocorr.plot(chains.all)
-off <- dev.off()
 
 # plot the combined traces
 cat("Plotting combined traces.", "\n\n")
