@@ -15,14 +15,14 @@ num_iters <- strtoi(args[6])
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
-# graph_code <- 'ghost2'
+# graph_code <- '7ea2140'
 # dstats_file <- 'dstats/pygmyhog.csv'
 # num_chains <- 2
 # num_temps <- 5
 # num_iters <- 1e6
 
 # default to 10% burn in and thinning
-burn <- num_iters / 10
+burn <- round(num_iters / 10, 0)
 thin <- 10
 
 # load the Dstat data
@@ -104,32 +104,68 @@ cat("Seed: ", seed, "\n", "\n")
 
 chains <- c()
 
-for (i in 1:num_chains) {
+run_chain <- function(i, num_iters) {
+
+    chain.prev <- NULL
+    chain.new <- NULL
 
     fullchain.file = paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv')
 
-    # don't rerun completed chains
+    # check if the chain exists
     if (file.exists(fullchain.file)) {
-        cat("Loading chain: ", i, "\n")
 
-        chain <- read.csv(fullchain.file)
+        cat("Loading chain: ", i, "\n")
+        chain.prev <- read.csv(fullchain.file)
+        row.count <- nrow(chain.prev)
+
+        if (row.count == num_iters) {
+            cat("Chain has correct number of iterations.", "\n")
+            num_iters <- 0
+
+        } else if (row.count < num_iters) {
+            # update the number of iterations
+            num_iters <- num_iters - row.count
+
+            cat("Restarting chain with", num_iters, "more iterations.", "\n")
+
+            # set the Markov chain to restart from the last position
+            initial <- as.numeric(tail(chain.prev, 1))
+
+        } else {
+            cat("Truncating chain to length", num_iters, "iterations.", "\n")
+            chain.prev <- head(chain.prev, num_iters)
+            num_iters <- 0
+        }
 
     } else {
-        cat("Starting chain: ", i, "\n")
+        cat("Starting new chain: ", i, "\n")
 
         # choose some random starting values for the params
         initial <- runif(length(mcmc$parameter_names))
-
-        # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
-        chain <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
-                                        iterations = num_iters, verbose = TRUE)
-
-        # save the full chain
-        write.csv(chain, file=fullchain.file, row.names = FALSE)
     }
 
-    # convert to MCMC object
-    mcmc.chain <- mcmc(chain)
+    if (num_iters > 0) {
+        # run the MCMC chain for the required number of iterations
+        # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
+        chain.new <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
+                                            iterations = num_iters, verbose = TRUE)
+
+    }
+
+    # merge any old and new chains
+    chain <- rbind(chain.prev, chain.new)
+
+    # save the full chain
+    write.csv(chain, file=fullchain.file, row.names = FALSE)
+
+    # convert to MCMC object and return
+    mcmc(chain)
+}
+
+for (i in 1:num_chains) {
+
+    # run the MCMC chain
+    mcmc.chain <- run_chain(i, num_iters)
 
     cat("\n")
 
