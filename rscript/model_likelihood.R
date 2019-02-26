@@ -203,7 +203,8 @@ for (i in 1:num_chains) {
     off <- dev.off()
 
     cat("Plotting the trace.\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
+    # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
+    png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '-pt%d.png'), width=7, height=7, units='in', res=300)
     plot(mcmc.burn)
     off <- dev.off()
 
@@ -241,5 +242,12 @@ gelman.plot(chains.all)
 off <- dev.off()
 
 # NB. values substantially above 1 indicate lack of convergence.
+gelman <- gelman.diag(chains.all, multivariate=FALSE, autoburnin=FALSE)
+
 cat("Gelman and Rubin's convergence diagnostic.", "\n")
-print(gelman.diag(chains.all, multivariate=FALSE, autoburnin=FALSE))
+print(gelman)
+
+if (max(gelman$psrf[,1]) > 1.1) {
+    warning(paste0("WARNING: PSRF above threshold. max(psrf) = ", max(gelman$psrf[,1]),
+                   ' ./bayes/', prefix, '-', graph_code))
+}
