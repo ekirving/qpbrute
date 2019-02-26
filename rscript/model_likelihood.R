@@ -21,9 +21,8 @@ num_iters <- strtoi(args[6])
 # num_temps <- 5
 # num_iters <- 1e6
 
-# default to 10% burn in and thinning
+# default to 10% burn in
 burn <- round(num_iters / 10, 0)
-thin <- 10
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)
@@ -99,7 +98,6 @@ cat("Chains: ", num_chains, "\n")
 cat("Temps: ", num_temps, "\n")
 cat("Iters: ", num_iters, "\n")
 cat("Burn in: ", burn, "\n")
-cat("Thin: ", thin, "\n")
 cat("Seed: ", seed, "\n", "\n")
 
 chains <- c()
@@ -178,34 +176,31 @@ for (i in 1:num_chains) {
     plotESSBurn(mcmc.chain, step.size=burn/2)
     off <- dev.off()
 
-    cat("Thinning chain: ", i, "\n")
+    # burn in the chain
+    mcmc.burn <- mcmc(burn_in(mcmc.chain, k=burn), start=burn)
 
-    # burn in and thin the chain
-    chain.thin <- thinning(burn_in(mcmc.chain, k=burn), k=thin)
-    mcmc.thin <- mcmc(chain.thin, start=burn, thin=thin)
-
-    # save the thin chain
-    write.csv(mcmc.thin, file=paste0('bayes/', prefix, "-", graph_code, '-thinned-', i, '.csv'), row.names = FALSE)
+    # NB. we do not thin the chain because there is no need
+    # see https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.2041-210X.2011.00131.x
 
     # print the summary stats
-    print(summary(mcmc.thin))
+    print(summary(mcmc.burn))
 
     cat("Effective Sample Size.\n")
-    print(effectiveSize(mcmc.thin))
+    print(effectiveSize(mcmc.burn))
     cat("\n")
 
     cat("Plotting autocorrelation.\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-thin-autocorr-', i, '.pdf'))
-    autocorr.plot(mcmc.thin)
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-autocorr-', i, '.pdf'))
+    autocorr.plot(mcmc.burn)
     off <- dev.off()
 
     cat("Plotting the trace.\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-thin-trace-', i, '.pdf'))
-    plot(mcmc.thin)
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
+    plot(mcmc.burn)
     off <- dev.off()
 
-    # add the thinnned chain to the list
-    chains[[i]] <- mcmc.thin
+    # add the burned-in chain to the list
+    chains[[i]] <- mcmc.burn
 }
 
 cat("\n\n", "--------------", "\n\n")
@@ -221,18 +216,18 @@ print(effectiveSize(chains.all))
 cat("\n")
 
 cat("Plotting autocorrelation.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-thin-autocorr-0.pdf'))
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-autocorr-0.pdf'))
 autocorr.plot(chains.all)
 off <- dev.off()
 
 # plot the combined traces
 cat("Plotting combined traces.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-thin-trace-0.pdf'))
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0.pdf'))
 plot(chains.all)
 off <- dev.off()
 
 cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-thin-gelman.pdf'))
+pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-gelman.pdf'))
 gelman.plot(chains.all)
 off <- dev.off()
 
