@@ -129,7 +129,7 @@ run_chain <- function(i, num_iters) {
             cat("Restarting chain with", num_iters, "more iterations.", "\n")
 
             # set the Markov chain to restart from the last position
-            initial <- as.numeric(tail(chain.prev, 1))
+            initial <- as.numeric(tail(chain.prev, 1)[mcmc$parameter_names])
 
         } else {
             cat("Truncating chain to length", num_iters, "iterations.", "\n")
@@ -152,6 +152,8 @@ run_chain <- function(i, num_iters) {
 
     }
 
+    cat("\n")
+
     # merge any old and new chains
     chain <- rbind(chain.prev, chain.new)
 
@@ -166,8 +168,6 @@ for (i in 1:num_chains) {
 
     # run the MCMC chain
     mcmc.chain <- run_chain(i, num_iters)
-
-    cat("\n")
 
     # check the acceptance rate (ideal is 0.234)
     cat("Acceptance Rate =", 1 - rejectionRate(mcmc.chain)[1], "\n\n")
