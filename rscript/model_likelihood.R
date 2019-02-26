@@ -12,6 +12,7 @@ dstats_file <- args[3]
 num_chains <- strtoi(args[4])
 num_temps <- strtoi(args[5])
 num_iters <- strtoi(args[6])
+num_burn <- strtoi(args[7])
 
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
@@ -21,9 +22,7 @@ num_iters <- strtoi(args[6])
 # num_chains <- 2
 # num_temps <- 5
 # num_iters <- 1e6
-
-# default to 10% burn in
-burn <- round(num_iters / 10, 0)
+# num_burn <- 1e5
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)
@@ -98,7 +97,7 @@ cat("Graph: ", graph_code, "\n")
 cat("Chains: ", num_chains, "\n")
 cat("Temps: ", num_temps, "\n")
 cat("Iters: ", num_iters, "\n")
-cat("Burn in: ", burn, "\n")
+cat("Burn in: ", num_burn, "\n")
 cat("Seed: ", seed, "\n", "\n")
 
 chains <- c()
@@ -148,7 +147,6 @@ run_chain <- function(i, num_iters) {
         # see https://www.rdocumentation.org/packages/admixturegraph/versions/1.0.2/topics/run_metropolis_hasting
         chain.new <- run_metropolis_hasting(mcmc, initial, no_temperatures = num_temps,
                                             iterations = num_iters, verbose = TRUE)
-
     }
 
     cat("\n\n")
@@ -174,7 +172,7 @@ for (i in 1:num_chains) {
     cat("Acceptance Rate =", 1 - rejectionRate(mcmc.chain)[1], "\n\n")
 
     # burn in the chain
-    mcmc.burn <- mcmc(burn_in(mcmc.chain, k=burn), start=burn)
+    mcmc.burn <- mcmc(burn_in(mcmc.chain, k=num_burn), start=num_burn)
 
     # calculate the ESS for all params
     ess <- effectiveSize(mcmc.burn)
@@ -197,7 +195,7 @@ for (i in 1:num_chains) {
     # plot ESS vs. burn-in
     cat("Plotting ESS vs. burn-in.", "\n\n")
     pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
-    plotESSBurn(mcmc.chain, step.size=round(burn/2, 0))
+    plotESSBurn(mcmc.chain, step.size=round(num_burn/2, 0))
     off <- dev.off()
 
     cat("Plotting thinned autocorrelation.\n\n")

@@ -168,7 +168,8 @@ class QPBayes:
                      self.dstat_csv,
                      MCMC_NUM_CHAINS,
                      MCMC_NUM_TEMPS,
-                     MCMC_NUM_ITERS], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
+                     MCMC_NUM_ITERS,
+                     MCMC_NUM_BURN], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
