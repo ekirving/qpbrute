@@ -128,7 +128,7 @@ run_chain <- function(i, num_iters) {
             cat("Restarting chain with", num_iters, "more iterations.", "\n")
 
             # set the Markov chain to restart from the last position
-            initial <- as.numeric(tail(chain.prev, 1)[mcmc$parameter_names])
+            initial <- as.numeric(setDF(tail(chain.prev, 1))[mcmc$parameter_names])
 
         } else {
             cat("Truncating chain to length", num_iters, "iterations.", "\n")
