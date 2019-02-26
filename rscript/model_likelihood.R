@@ -129,6 +129,9 @@ run_chain <- function(i, num_iters) {
             # set the Markov chain to restart from the last position
             initial <- as.numeric(setDF(tail(chain.prev, 1))[mcmc$parameter_names])
 
+            # starting with a value of 1 breaks the MCMC
+            initial <- replace(initial,initial==1, 0.9999999)
+
         } else {
             cat("Truncating chain to length", num_iters, "iterations.", "\n")
             chain.prev <- head(chain.prev, num_iters)
