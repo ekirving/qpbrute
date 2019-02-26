@@ -150,7 +150,7 @@ run_chain <- function(i, num_iters) {
 
     }
 
-    cat("\n")
+    cat("\n\n")
 
     # merge any old and new chains
     chain <- rbind(chain.prev, chain.new)
@@ -170,14 +170,16 @@ for (i in 1:num_chains) {
     # check the acceptance rate (ideal is 0.234)
     cat("Acceptance Rate =", 1 - rejectionRate(mcmc.chain)[1], "\n\n")
 
-    # plot ESS vs. burn-in
-    cat("Plotting ESS vs. burn-in.", "\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
-    plotESSBurn(mcmc.chain, step.size=burn/2)
-    off <- dev.off()
-
     # burn in the chain
     mcmc.burn <- mcmc(burn_in(mcmc.chain, k=burn), start=burn)
+
+    # calculate the ESS for all params
+    ess <- effectiveSize(mcmc.burn)
+
+    if (min(ess) < 100) {
+        warning(paste0("WARNING: ESS below threshold. min(ess) = ", min(ess),
+                       ' ./bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'))
+    }
 
     # NB. we do not thin the chain because there is no need
     # see https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.2041-210X.2011.00131.x
@@ -186,8 +188,14 @@ for (i in 1:num_chains) {
     print(summary(mcmc.burn))
 
     cat("Effective Sample Size.\n")
-    print(effectiveSize(mcmc.burn))
+    print(ess)
     cat("\n")
+
+    # plot ESS vs. burn-in
+    cat("Plotting ESS vs. burn-in.", "\n\n")
+    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
+    plotESSBurn(mcmc.chain, step.size=round(burn/2, 0))
+    off <- dev.off()
 
     cat("Plotting autocorrelation.\n\n")
     pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-autocorr-', i, '.pdf'))
@@ -222,7 +230,8 @@ off <- dev.off()
 
 # plot the combined traces
 cat("Plotting combined traces.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0.pdf'))
+# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0.pdf'))
+png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0-pt%d.png'), width=7, height=7, units='in', res=300)
 plot(chains.all)
 off <- dev.off()
 
