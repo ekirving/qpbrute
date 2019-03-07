@@ -21,8 +21,8 @@ num_burn <- strtoi(args[7])
 # dstats_file <- 'dstats/pygmyhog.csv'
 # num_chains <- 2
 # num_temps <- 5
-# num_iters <- 1e6
-# num_burn <- 1e5
+# num_iters <- 2e6
+# num_burn <- 1e6
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)
