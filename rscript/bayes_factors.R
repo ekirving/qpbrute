@@ -22,8 +22,8 @@ num_burn <- strtoi(args[2])
 # load all the thinned chains
 mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d).csv")
 mcmc.files <- list.files(path='bayes', pattern=mcmc.regex, full.names=TRUE)
-graphs <- str_match(mcmc.files, mcmc.regex)[,2]
-names(mcmc.files) <- graphs
+names(mcmc.files) <- str_match(mcmc.files, mcmc.regex)[,2]
+graphs <- unique(names(mcmc.files))
 
 # load all the chains, and burn them in
 chains.all <- lapply(mcmc.files, function(x) {
