@@ -1,27 +1,41 @@
 #!/usr/bin/env Rscript
-library(admixturegraph)
-library(gtools)
-library(stringr)
-library(ggplot2)
-library(reshape2)
-library(viridis)
-library(scales)
-library(raster)
+library(admixturegraph, quietly=T)
+library(gtools, quietly=T)
+library(stringr, quietly=T)
+library(ggplot2, quietly=T)
+library(reshape2, quietly=T)
+library(viridis, quietly=T)
+library(scales, quietly=T)
+library(raster, quietly=T)
+library(data.table, quietly=T)
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
 prefix <- args[1]
+num_burn <- strtoi(args[2])
 
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
+# num_burn <- 1e5
 
 # load all the thinned chains
-mcmc.regex <- paste0(prefix, "-(.+)-thinned-1.csv")  # TODO merge the two thin chains
+mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d).csv")
 mcmc.files <- list.files(path='bayes', pattern=mcmc.regex, full.names=TRUE)
 graphs <- str_match(mcmc.files, mcmc.regex)[,2]
 names(mcmc.files) <- graphs
-chains <- lapply(mcmc.files, function(x) data.matrix(read.csv(x)))
+
+# load all the chains, and burn them in
+chains.all <- lapply(mcmc.files, function(x) {
+    burn_in(fread(x, header = T, sep = ','), k=num_burn)
+})
+
+chains <- list()
+# merge replicate chains
+for (graph in graphs) {
+    chains[[graph]] <- rbindlist(chains.all[names(chains.all) == graph])
+}
+remove(chains.all)
 
 # compute the likelihoods for all models
 ll <- data.frame()

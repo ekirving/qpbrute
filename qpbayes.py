@@ -159,17 +159,15 @@ class QPBayes:
         """
         log_file = 'bayes/{}-{}-likelihood.log'.format(self.prefix, graph)
 
-        if not os.path.isfile("bayes/{}-{}-thinned-{}.csv".format(self.prefix, graph, MCMC_NUM_CHAINS)):
-            # only run once
-            run_cmd(["Rscript",
-                     "rscript/model_likelihood.R",
-                     self.prefix,
-                     graph,
-                     self.dstat_csv,
-                     MCMC_NUM_CHAINS,
-                     MCMC_NUM_TEMPS,
-                     MCMC_NUM_ITERS,
-                     MCMC_NUM_BURN], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
+        run_cmd(["Rscript",
+                 "rscript/model_likelihood.R",
+                 self.prefix,
+                 graph,
+                 self.dstat_csv,
+                 MCMC_NUM_CHAINS,
+                 MCMC_NUM_TEMPS,
+                 MCMC_NUM_ITERS,
+                 MCMC_NUM_BURN], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
@@ -179,7 +177,8 @@ class QPBayes:
         """
         run_cmd(["Rscript",
                  "rscript/bayes_factors.R",
-                 self.prefix])
+                 self.prefix,
+                 MCMC_NUM_BURN])
 
 
 def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_MAX):

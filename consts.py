@@ -19,4 +19,4 @@ COLOURS = ['#1f78b4', '#33a02c', '#e31a1c', '#ff7f00', '#6a3d9a', '#b15928', '#a
 MCMC_NUM_CHAINS = 2
 MCMC_NUM_TEMPS = 5
 MCMC_NUM_ITERS = int(2e6)
-MCMC_NUM_BURN = int(2e5)
+MCMC_NUM_BURN = int(1e6)
