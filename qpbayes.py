@@ -159,15 +159,17 @@ class QPBayes:
         """
         log_file = 'bayes/{}-{}-likelihood.log'.format(self.prefix, graph)
 
-        run_cmd(["Rscript",
-                 "rscript/model_likelihood.R",
-                 self.prefix,
-                 graph,
-                 self.dstat_csv,
-                 MCMC_NUM_CHAINS,
-                 MCMC_NUM_TEMPS,
-                 MCMC_NUM_ITERS,
-                 MCMC_NUM_BURN], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
+        if not os.path.isfile("bayes/{}-{}-burn-gelman.pdf".format(self.prefix, graph)):
+            # only run once
+            run_cmd(["Rscript",
+                     "rscript/model_likelihood.R",
+                     self.prefix,
+                     graph,
+                     self.dstat_csv,
+                     MCMC_NUM_CHAINS,
+                     MCMC_NUM_TEMPS,
+                     MCMC_NUM_ITERS,
+                     MCMC_NUM_BURN], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
