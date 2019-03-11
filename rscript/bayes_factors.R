@@ -27,17 +27,18 @@ graphs <- unique(names(mcmc.files))
 
 # load all the chains, and burn them in
 chains.all <- lapply(mcmc.files, function(x) {
+    cat("Loading chain: ", x, "\n")
     burn_in(fread(x, header = T, sep = ','), k=num_burn)
 })
 
 chains <- list()
-# merge replicate chains
+cat("Merging replicate chains.", "\n")
 for (graph in graphs) {
     chains[[graph]] <- rbindlist(chains.all[names(chains.all) == graph])
 }
 remove(chains.all)
 
-# compute the likelihoods for all models
+cat("Computing the likelihoods for all models.", "\n")
 ll <- data.frame()
 for (graph in graphs) {
     ll <- rbind(ll, model_likelihood_n(chains[[graph]][,'likelihood'], 100))
@@ -58,7 +59,7 @@ mtx <- matrix(nrow=num_chains, ncol=num_chains)
 rownames(mtx) <- names(chains)
 colnames(mtx) <- names(chains)
 
-# compare the Bayes factors for all model pairs
+cat("Comparing the Bayes factors for all model pairs.", "\n")
 for(i in 1:nrow(perms)) {
     x <- perms[i,1]
     y <- perms[i,2]
@@ -87,6 +88,6 @@ ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
           axis.title.y = element_blank(),
           legend.text.align = 1) +
     scale_fill_viridis(name = "K", na.value = 'gainsboro', option='viridis')
-                       # rescale the color palette so the zero threshold is obvious
-                       # values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
+    # rescale the color palette so the zero threshold is obvious
+    # values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
 dev.off()
