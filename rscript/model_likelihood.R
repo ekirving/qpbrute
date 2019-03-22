@@ -181,7 +181,7 @@ for (i in 1:num_chains) {
     ess <- effectiveSize(mcmc.burn)
 
     if (min(ess) < 100) {
-        warning(paste0("WARNING: ESS below threshold. min(ess) = ", min(ess),
+        cat(paste0("WARNING: ESS below threshold. min(ess) = ", min(ess),
                        ' ./bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'))
     }
 
@@ -247,6 +247,6 @@ cat("Gelman and Rubin's convergence diagnostic.", "\n")
 print(gelman)
 
 if (max(gelman$psrf[,1]) > 1.1) {
-    warning(paste0("WARNING: PSRF above threshold. max(psrf) = ", max(gelman$psrf[,1]),
+    cat(paste0("WARNING: PSRF above threshold. max(psrf) = ", max(gelman$psrf[,1]),
                    ' ./bayes/', prefix, '-', graph_code))
 }
