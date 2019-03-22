@@ -183,7 +183,7 @@ class QPBayes:
                  MCMC_NUM_BURN])
 
 
-def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_MAX):
+def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_HIGH):
     """
     Find the best fitting graph by calculating the Bayes factors for each model found by QPBrute.
     """
