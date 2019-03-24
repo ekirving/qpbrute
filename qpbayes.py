@@ -177,10 +177,12 @@ class QPBayes:
         """
         Compare Bayes factors to find the best fitting model.
         """
+        log_file = 'bayes/{}-bayes.log'.format(self.prefix)
+
         run_cmd(["Rscript",
                  "rscript/bayes_factors.R",
                  self.prefix,
-                 MCMC_NUM_BURN])
+                 MCMC_NUM_BURN], stdout=open(log_file, 'w'))
 
 
 def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_HIGH):
