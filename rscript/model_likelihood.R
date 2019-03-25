@@ -17,12 +17,12 @@ num_burn <- strtoi(args[7])
 # TODO remove when done testing
 # setwd('/Users/Evan/Dropbox/Code/qpbrute')
 # prefix <- 'pygmyhog'
-# graph_code <- '7ea2140'
+# graph_code <- '1d9676e'
 # dstats_file <- 'dstats/pygmyhog.csv'
 # num_chains <- 2
 # num_temps <- 5
 # num_iters <- 2e6
-# num_burn <- 1e6
+# num_burn <- 1.5e6
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)
@@ -79,6 +79,10 @@ off <- dev.off()
 
 # fit the graph
 graph_fit <- fit_graph(dstats.pos, graph)
+
+cat("Summary of graph fit...\n")
+cat(summary(graph_fit))
+cat("\n")
 
 # plot the fit
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
