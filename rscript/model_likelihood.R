@@ -181,17 +181,17 @@ for (i in 1:num_chains) {
     # burn in the chain
     mcmc.burn <- mcmc(burn_in(mcmc.chain, k=num_burn), start=num_burn)
 
-    # calculate the ESS for all params
-    ess <- effectiveSize(mcmc.burn)
-
-    if (min(ess) < 100) {
-        cat(paste0("WARNING: ESS below threshold. min(ess) = ", min(ess),
-                       ' ./bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'))
-    }
-
-    # NB. we do not thin the chain because there is no need
-    # see https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.2041-210X.2011.00131.x
-
+    # # calculate the ESS for all params
+    # ess <- effectiveSize(mcmc.burn)
+    #
+    # if (min(ess) < 100) {
+    #     cat(paste0("WARNING: ESS below threshold. min(ess) = ", min(ess),
+    #                    ' ./bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'))
+    # }
+    #
+    # # NB. we do not thin the chain because there is no need
+    # # see https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.2041-210X.2011.00131.x
+    #
     # # print the summary stats
     # print(summary(mcmc.burn))
     #
