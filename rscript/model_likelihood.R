@@ -22,7 +22,14 @@ num_burn <- strtoi(args[7])
 # num_chains <- 2
 # num_temps <- 5
 # num_iters <- 2e6
-# num_burn <- 1.5e6
+# num_burn <- 1.1e6
+
+# load any custom burn in values
+burn_file <- paste0(prefix, '-burnin.csv')
+if (file.exists(burn_file)) {
+    burn <- read.csv(burn_file, row.names = 1, col.names = c('', 'burn'), header = F)
+    num_burn <- ifelse(is.na(burn[graph_code,]), num_burn, burn[graph_code,])
+}
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)

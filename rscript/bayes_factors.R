@@ -19,6 +19,12 @@ num_burn <- strtoi(args[2])
 # prefix <- 'pygmyhog'
 # num_burn <- 1e5
 
+# load any custom burn in values
+burn_over <- paste0(prefix, '-burnin.csv')
+if (file.exists(burn_over)) {
+    burn <- read.csv(burn_over, row.names = 1, col.names = c('', 'burn'), header = F)
+}
+
 # load all the thinned chains
 mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d).csv")
 mcmc.files <- list.files(path='bayes', pattern=mcmc.regex, full.names=TRUE)
@@ -28,7 +34,9 @@ graphs <- unique(names(mcmc.files))
 # load all the chains, and burn them in
 chains.all <- lapply(mcmc.files, function(x) {
     cat("Loading chain: ", x, "\n")
-    burn_in(fread(x, header = T, sep = ','), k=num_burn)
+    graph <- str_match(x, mcmc.regex)[,2]
+    offset <- ifelse(is.na(burn[graph,]), num_burn, burn[graph,])
+    burn_in(fread(x, header = T, sep = ','), k=offset)
 })
 
 chains <- list()
