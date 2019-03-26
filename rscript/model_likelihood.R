@@ -67,27 +67,27 @@ convert_qpgraph <- function(graph_file) {
 # perform the conversion
 graph <- convert_qpgraph(paste0("graphs/", prefix, "-", graph_code, ".graph"))
 
-# plot the graph
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-graph.pdf'))
-plot(graph, show_admixture_labels = TRUE)
-off <- dev.off()
-
-# plot the D-stats
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-dstat.pdf'))
-plot(f4stats(dstats.pos))
-off <- dev.off()
-
-# fit the graph
-graph_fit <- fit_graph(dstats.pos, graph)
-
-cat("Summary of graph fit...\n")
-cat(summary(graph_fit))
-cat("\n")
-
-# plot the fit
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
-plot(graph_fit)
-off <- dev.off()
+# # plot the graph
+# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-graph.pdf'))
+# plot(graph, show_admixture_labels = TRUE)
+# off <- dev.off()
+#
+# # plot the D-stats
+# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-dstat.pdf'))
+# plot(f4stats(dstats.pos))
+# off <- dev.off()
+#
+# # fit the graph
+# graph_fit <- fit_graph(dstats.pos, graph)
+#
+# cat("Summary of graph fit...\n")
+# cat(summary(graph_fit))
+# cat("\n")
+#
+# # plot the fit
+# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
+# plot(graph_fit)
+# off <- dev.off()
 
 # setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
@@ -192,29 +192,29 @@ for (i in 1:num_chains) {
     # NB. we do not thin the chain because there is no need
     # see https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/j.2041-210X.2011.00131.x
 
-    # print the summary stats
-    print(summary(mcmc.burn))
-
-    cat("Effective Sample Size.\n")
-    print(ess)
-    cat("\n")
-
-    # plot ESS vs. burn-in
-    cat("Plotting ESS vs. burn-in.", "\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
-    plotESSBurn(mcmc.chain, step.size=round(num_burn/2, 0))
-    off <- dev.off()
-
-    cat("Plotting thinned autocorrelation.\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-thin-autocorr-', i, '.pdf'))
-    autocorr.plot(thinning(mcmc.burn, k=1000), lag.max=50)
-    off <- dev.off()
-
-    cat("Plotting the trace.\n\n")
-    # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
-    png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '-pt%d.png'), width=7, height=7, units='in', res=300)
-    plot(mcmc.burn)
-    off <- dev.off()
+    # # print the summary stats
+    # print(summary(mcmc.burn))
+    #
+    # cat("Effective Sample Size.\n")
+    # print(ess)
+    # cat("\n")
+    #
+    # # plot ESS vs. burn-in
+    # cat("Plotting ESS vs. burn-in.", "\n\n")
+    # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
+    # plotESSBurn(mcmc.chain, step.size=round(num_burn/2, 0))
+    # off <- dev.off()
+    #
+    # cat("Plotting thinned autocorrelation.\n\n")
+    # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-thin-autocorr-', i, '.pdf'))
+    # autocorr.plot(thinning(mcmc.burn, k=1000), lag.max=50)
+    # off <- dev.off()
+    #
+    # cat("Plotting the trace.\n\n")
+    # # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
+    # png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '-pt%d.png'), width=7, height=7, units='in', res=300)
+    # plot(mcmc.burn)
+    # off <- dev.off()
 
     # add the burned-in chain to the list
     chains[[i]] <- mcmc.burn
@@ -225,24 +225,24 @@ cat("Analysing combined chains.", "\n\n")
 
 chains.all = mcmc.list(chains)
 
-# print the summary stats
-print(summary(chains.all))
-
-cat("Effective Sample Size.\n")
-print(effectiveSize(chains.all))
-cat("\n")
-
-# plot the combined traces
-cat("Plotting combined traces.", "\n\n")
-# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0.pdf'))
-png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0-pt%d.png'), width=7, height=7, units='in', res=300)
-plot(chains.all)
-off <- dev.off()
-
-cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-gelman.pdf'))
-gelman.plot(chains.all)
-off <- dev.off()
+# # print the summary stats
+# print(summary(chains.all))
+#
+# cat("Effective Sample Size.\n")
+# print(effectiveSize(chains.all))
+# cat("\n")
+#
+# # plot the combined traces
+# cat("Plotting combined traces.", "\n\n")
+# # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0.pdf'))
+# png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0-pt%d.png'), width=7, height=7, units='in', res=300)
+# plot(chains.all)
+# off <- dev.off()
+#
+# cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
+# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-gelman.pdf'))
+# gelman.plot(chains.all)
+# off <- dev.off()
 
 # NB. values substantially above 1 indicate lack of convergence.
 gelman <- gelman.diag(chains.all, multivariate=FALSE, autoburnin=FALSE)
