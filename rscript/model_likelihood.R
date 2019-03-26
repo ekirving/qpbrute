@@ -250,7 +250,7 @@ gelman <- gelman.diag(chains.all, multivariate=FALSE, autoburnin=FALSE)
 cat("Gelman and Rubin's convergence diagnostic.", "\n")
 print(gelman)
 
-if (max(gelman$psrf[,1]) > 1.1) {
-    cat(paste0("WARNING: PSRF above threshold. max(psrf) = ", max(gelman$psrf[,1]),
+if (gelman$psrf['likelihood', 1] > 1.1) {
+    cat(paste0("WARNING: PSRF of likelihood above threshold = ", round(gelman$psrf['likelihood', 1], 3),
                    ' ./bayes/', prefix, '-', graph_code))
 }
