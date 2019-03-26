@@ -69,7 +69,7 @@ graph <- convert_qpgraph(paste0("graphs/", prefix, "-", graph_code, ".graph"))
 
 # plot the graph
 pdf(file=paste0('bayes/', prefix, "-", graph_code, '-graph.pdf'))
-plot(graph)
+plot(graph, show_admixture_labels = TRUE)
 off <- dev.off()
 
 # plot the D-stats
