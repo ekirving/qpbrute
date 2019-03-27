@@ -33,9 +33,9 @@ graphs <- unique(names(mcmc.files))
 
 # load all the chains, and burn them in
 chains.all <- lapply(mcmc.files, function(x) {
-    cat("Loading chain: ", x, "\n")
     graph <- str_match(x, mcmc.regex)[,2]
     offset <- ifelse(is.na(burn[graph,]), num_burn, burn[graph,])
+    cat("Loading chain: ", x, "\t", "Burn in:", offset, "\n")
     burn_in(fread(x, header = T, sep = ','), k=offset)
 })
 
