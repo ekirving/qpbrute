@@ -4,6 +4,9 @@
 # R environment files
 .RData
 .Rhistory
+*Rproj*
+Rplot*
+.Rproj.user
 
 # output logging from nohup command
 nohup*
@@ -23,6 +26,3 @@ seedms
 
 # ignore test data
 *pygmy*
-*Rproj*
-Rplot*
-.Rproj.user
