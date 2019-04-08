@@ -8,7 +8,7 @@ import subprocess
 from consts import *
 
 
-def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None):
+def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False):
     """
     Executes the given command in a system subprocess
 
@@ -23,7 +23,8 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None):
     cmd = [str(args) for args in cmd]
 
     # print the command
-    print(u' '.join(cmd))
+    if verbose:
+        print(u' '.join(cmd))
 
     # handle custom environment variables
     local_env = os.environ
