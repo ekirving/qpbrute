@@ -4,7 +4,7 @@ This repository contains Python code for automatically fitting admixture graphs
 to iteratively fit increasingly complex models, and R code for calculating Bayes factors 
 (with [admixturegraph](https://github.com/mailund/admixture_graph)) to compare the fitted models.
 
-![sim1](./sim1.png?raw=true) 
+![sim1](./test/sim1.png?raw=true) 
 
 The heuristic search algorithm was first described in the paper 
 [The evolutionary history of dogs in the Americas](https://doi.org/10.1126/science.aao4776).
