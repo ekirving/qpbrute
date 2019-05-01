@@ -7,7 +7,10 @@ to iteratively fit increasingly complex models, and R code for calculating Bayes
 ![sim1](./test/sim1.png?raw=true) 
 
 The heuristic search algorithm was first described in the paper 
-[The evolutionary history of dogs in the Americas](https://doi.org/10.1126/science.aao4776).
+[The evolutionary history of dogs in the Americas](https://doi.org/10.1126/science.aao4776). The code was subsequently
+refactored to form a stand alone tool, include Bayes factor calculations, for the paper 
+[Genomic analysis on pygmy hog reveals extensive interbreeding during wild boar expansion](
+https://doi.org/10.1038/s41467-019-10017-2). 
 
 Given an outgroup with which to root the graph, a stepwise addition order algorithm is used to add leaf nodes to 
 the graph. At each step, insertion of a new node is tested at all branches of the graph, except the outgroup branch. 
@@ -20,15 +23,14 @@ The resulting list of fitted graphs are then passed to the MCMC algorithm implem
 to compute the marginal likelihood of the models and their Bayes Factors (BF).
 
 ## Citation
-If you reuse any of this code then please cite the paper:
-> Leathlobhair, M.N., Perri, A.R., Irving-Pease, E.K., Witt, K.E., Linderholm, A., Haile, J., Lebrasseur, O., Ameen, C., 
-> Blick, J., Boyko, A.R., Brace, S., Cortes, Y.N., Crockford, S.J., Devault, A., Dimopoulos, E.A., Eldridge, M., Enk, 
-> J., Gopalakrishnan, S., Gori, K., Grimes, V., Guiry, E., Hansen, A.J., Hulme-Beaman, A., Johnson, J., Kitchen, A., 
-> Kasparov, A.K., Kwon, Y.-M., Nikolskiy, P.A., Lope, C.P., Manin, A., Martin, T., Meyer, M., Myers, K.N., Omura, M., 
-> Rouillard, J.-M., Pavlova, E.Y., Sciulli, P., Sinding, M.-H.S., Strakova, A., Ivanova, V.V., Widga, C., Willerslev, 
-> E., Pitulko, V.V., Barnes, I., Gilbert, M.T.P., Dobney, K.M., Malhi, R.S., Murchison, E.P., Larson, G., Frantz, 
-> L.A.F., 2018. The evolutionary history of dogs in the Americas. *Science* 361, 81–85. 
+If you reuse any of this code then please cite the papers:
+> Leathlobhair, M.N.\*, Perri, A.R.\*, Irving-Pease, E.K.\*, Witt, K.E.\*, Linderholm, A.\*, [...], Murchison, E.P., 
+> Larson, G., Frantz, L.A.F., 2018. The evolutionary history of dogs in the Americas. *Science* 361, 81–85. 
 > https://doi.org/10.1126/science.aao4776
+
+> Liu, L., Bosse, M., Megens, H.-J., Frantz, L.A.F., Lee, Y.-L., Irving-Pease, E.K., Narayan, G., Groenen, M.A.M., 
+> Madsen, O., 2019. Genomic analysis on pygmy hog reveals extensive interbreeding during wild boar expansion. 
+> *Nature Communications* 10, 1992. https://doi.org/10.1038/s41467-019-10017-2
 
 ## Installation
 
