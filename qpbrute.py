@@ -564,10 +564,12 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
+    parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
+                        default=CPU_CORES_MAX)
 
     argv = parser.parse_args()
 
     # test all the models
-    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out)
+    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
