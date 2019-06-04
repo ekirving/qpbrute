@@ -215,7 +215,9 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
+    parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
+                        default=CPU_CORES_MAX)
 
     argv = parser.parse_args()
 
-    calculate_bayes_factors(argv.geno, argv.snp, argv.ind, argv.prefix, argv.pops, argv.out)
+    calculate_bayes_factors(argv.geno, argv.snp, argv.ind, argv.prefix, argv.pops, argv.out, nthreads=argv.threads)
