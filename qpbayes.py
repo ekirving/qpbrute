@@ -39,7 +39,7 @@ class QPBayes:
         self.nodes = nodes
         self.outgroup = outgroup
         self.verbose = verbose
-        self.nthreads = nthreads
+        self.nthreads = int(nthreads)
 
         # sanity check the outgroup is not in the node list
         if outgroup in nodes:

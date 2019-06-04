@@ -46,7 +46,7 @@ class QPBrute:
         self.dot_path = dot_path
         self.pdf_path = pdf_path
         self.verbose = verbose
-        self.nthreads = nthreads
+        self.nthreads = int(nthreads)
 
         # should we try all possible graphs, or should we stop when we find something reasonable
         self.exhaustive_search = exhaustive
