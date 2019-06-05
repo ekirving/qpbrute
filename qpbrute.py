@@ -325,6 +325,8 @@ class QPBrute:
         read_log = False
         worst_fstat = []
 
+        header = ['Fit', 'Obs', 'Diff', 'Std.', 'error', 'Z']
+
         for line in log:
             if 'outliers' in line:
                 read_log = True
@@ -335,8 +337,10 @@ class QPBrute:
                 continue
 
             if read_log and len(line.strip()) > 0:
-                # save all the outliers
-                outliers.append(line.split())
+                outlier = line.split()
+                if outlier != header:
+                    # save all the outliers
+                    outliers.append(outlier)
 
         return outliers, worst_fstat
 
