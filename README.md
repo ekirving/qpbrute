@@ -42,6 +42,7 @@ Python ≥ 2.7 with the following modules:
 
 * [biopython](https://github.com/biopython/biopython)
 * [graph-tool](https://github.com/antmd/graph-tool)
+* [graphviz](https://github.com/xflr6/graphviz)
 * [matplotlib](https://github.com/matplotlib/matplotlib)
 * [numpy](https://github.com/numpy/numpy)
 * [pandas](https://github.com/pandas-dev/pandas)
@@ -50,7 +51,7 @@ Python ≥ 2.7 with the following modules:
 
 
 ```bash
-pip install biopython matplotlib numpy pandas pathos scipy
+pip install biopython graphviz matplotlib numpy pandas pathos scipy
 ```
 
 ```bash
