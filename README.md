@@ -89,7 +89,23 @@ install_github("sbfnk/fitR")
 
 * [AdmixTools](https://github.com/DReichLab/AdmixTools)
 
+Note: the build location of the binary files for AdmixTools need to be added to your path.
+
+```bash
+echo 'export PATH="/path/to/AdmixTools/bin:$PATH"' >> ~/.bash_profile
+```
+
+Then reload your bash profile:
+```bash
+source ~/.bash_profile
+```
+ 
 ## Running the pipeline
+
+Note: qpBrute is designed to work exclusively from inside the root folder of the project. Please do not attempt to run
+either `qpbrute.py` or `qpbayes.py` from other locations. 
+
+***
 
 The pipeline is broken into two steps:
 
