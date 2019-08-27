@@ -60,42 +60,46 @@ chains <- chains[row.names(ll)]
 # save the model likelihoods
 write.csv(ll, file=paste0('bayes/', prefix, "-likelihoods.csv"))
 
-# make a matrix to hold all the pairwise combinations
 num_chains <- length(chains)
-perms <- permutations(num_chains, 2, names(chains))
-mtx <- matrix(nrow=num_chains, ncol=num_chains)
-rownames(mtx) <- names(chains)
-colnames(mtx) <- names(chains)
 
-cat("Comparing the Bayes factors for all model pairs.", "\n")
-for(i in 1:nrow(perms)) {
-    x <- perms[i,1]
-    y <- perms[i,2]
-    K <- model_bayes_factor_n(chains[[x]][, "likelihood"],
-                              chains[[y]][, "likelihood"], 100)
-    mtx[x,y] <- K[,'mean']
+if (num_chains >= 2) {
+
+    # make a matrix to hold all the pairwise combinations
+    perms <- permutations(num_chains, 2, names(chains))
+    mtx <- matrix(nrow=num_chains, ncol=num_chains)
+    rownames(mtx) <- names(chains)
+    colnames(mtx) <- names(chains)
+
+    cat("Comparing the Bayes factors for all model pairs.", "\n")
+    for(i in 1:nrow(perms)) {
+        x <- perms[i,1]
+        y <- perms[i,2]
+        K <- model_bayes_factor_n(chains[[x]][, "likelihood"],
+                                  chains[[y]][, "likelihood"], 100)
+        mtx[x,y] <- K[,'mean']
+    }
+
+    # convert the matrix into the 3-column format required by geom_tile
+    melted_mtx <- melt(mtx)
+
+    # we consider K > 150 to be very strong statistical support, so cap at that threshold
+    # see https://en.wikipedia.org/wiki/Bayes_factor#Interpretation
+    melted_mtx$value <- clamp(melted_mtx$value, lower=-150, upper=150)
+
+    # set the sort oder for the heatmap by reordering the factors
+    melted_mtx$Var1 <- factor(melted_mtx$Var1, levels=rev(names(chains)))
+    melted_mtx$Var2 <- factor(melted_mtx$Var2, levels=names(chains))
+
+    # plot the heatmap
+    pdf(file=paste0('bayes/', prefix, "-heatmap.pdf"), width=9, height=7)
+    ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
+        geom_tile() +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1),
+              axis.title.x = element_blank(),
+              axis.title.y = element_blank(),
+              legend.text.align = 1) +
+        scale_fill_viridis(name = "K", na.value = 'gainsboro', option='viridis')
+        # rescale the color palette so the zero threshold is obvious
+        # values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
+    dev.off()
 }
-
-# convert the matrix into the 3-column format required by geom_tile
-melted_mtx <- melt(mtx)
-
-# we consider K > 150 to be very strong statistical support, so cap at that threshold
-# see https://en.wikipedia.org/wiki/Bayes_factor#Interpretation
-melted_mtx$value <- clamp(melted_mtx$value, lower=-150, upper=150)
-
-# set the sort oder for the heatmap by reordering the factors
-melted_mtx$Var1 <- factor(melted_mtx$Var1, levels=rev(names(chains)))
-melted_mtx$Var2 <- factor(melted_mtx$Var2, levels=names(chains))
-
-# plot the heatmap
-pdf(file=paste0('bayes/', prefix, "-heatmap.pdf"), width=9, height=7)
-ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
-    geom_tile() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1),
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          legend.text.align = 1) +
-    scale_fill_viridis(name = "K", na.value = 'gainsboro', option='viridis')
-    # rescale the color palette so the zero threshold is obvious
-    # values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
-dev.off()
