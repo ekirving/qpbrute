@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-rsync -avz --partial \
+rsync -az  --partial \
            --progress \
            --stats \
            --exclude '.git*' \
@@ -14,6 +14,6 @@ rsync -avz --partial \
            --exclude '*.gz' \
            --exclude '*.bak*' \
            --exclude 'nohup*' \
-           --exclude 'graphs/*.log' \
-           --exclude 'bayes*/*-chain-*.csv' \
+           --exclude 'graphs*/*' \
+           --exclude 'bayes*/*' \
            evan@palaeoprime:~/qpbrute/ ~/Dropbox/Code/qpbrute/
