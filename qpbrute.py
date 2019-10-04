@@ -32,14 +32,8 @@ from consts import *
 
 class QPBrute:
 
-    # how many outliers should we allow before pruning a branch in graph space
-    MAX_OUTLIER_THRESHOLD = 0
-
-    # print PDFs for graphs with (N - offset) nodes
-    REMAINING_PRINT_OFFSET = 0
-
     def __init__(self, par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
-                 no_admix):
+                 no_admix, max_outlier, print_offset):
         """
         Initialise the object attributes 
         """
@@ -50,6 +44,8 @@ class QPBrute:
         self.nthreads = int(nthreads)
         self.skeleton = skeleton
         self.no_admix = no_admix
+        self.max_outlier = int(max_outlier)
+        self.print_offset = int(print_offset)
 
         # should we try all possible graphs, or should we stop when we find something reasonable
         self.exhaustive_search = exhaustive
@@ -192,13 +188,16 @@ class QPBrute:
             self.tested_graphs.add(graph_name)
 
             # did our new trees pass the threshold
-            if len(outliers) <= self.MAX_OUTLIER_THRESHOLD:
+            if len(outliers) <= self.max_outlier:
 
                 # recursively add any remaining nodes
                 if remaining:
                     self.recurse_tree(new_tree, remaining[0], remaining[1:], depth + 1)
                 else:
-                    self.log("SUCCESS: Placed all nodes on a graph without outliers!")
+                    if len(outliers) == 0:
+                        self.log("SUCCESS: Placed all nodes on a graph without outliers!")
+                    else:
+                        self.log("INFO: Placed all nodes on a graph with {} outlier(s).".format(len(outliers)))
 
                     # add this graph to the list of solutions
                     self.solutions.add(graph_name)
@@ -301,7 +300,7 @@ class QPBrute:
         num_outliers = len(outliers)
 
         # only print PDFs for graphs that pass the threshold
-        if num_outliers <= self.MAX_OUTLIER_THRESHOLD and num_nodes > (len(self.nodes) - self.REMAINING_PRINT_OFFSET):
+        if num_outliers <= self.max_outlier and num_nodes > (len(self.nodes) - self.print_offset):
 
             # embed some useful metadata info in the PDF name
             pdf_file = self.pdf_path + '-n{nodes}-o{out}-a{admix}-{name}.pdf'.format(nodes=num_nodes,
@@ -515,7 +514,7 @@ class NodeUnplaceable(Exception):
 
 
 def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX,
-                    skeleton=None, no_admix=False):
+                    skeleton=None, no_admix=False, max_outlier=0, print_offset=0):
     """
     Find the best fitting graph for a given set of nodes, by permuting all possible graphs.
     """
@@ -530,7 +529,7 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
 
     # instantiate the class
     pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
-                 no_admix)
+                 no_admix, max_outlier, print_offset)
 
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
@@ -582,15 +581,19 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
-    parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
-                        default=CPU_CORES_MAX)
     parser.add_argument("--skeleton", help="A skeleton model to add all other nodes to", metavar='FILE')
     parser.add_argument("--no_admix", help="Do not insert new nodes with admixture branches", action='store_true')
+    parser.add_argument("--max_outlier", help="How many outliers are permitted before pruning a graph", metavar='NUM',
+                        default=0)
+    parser.add_argument("--print_offset", help="Print PDFs for graphs with (N - offset) nodes", metavar='NUM',
+                        default=0)
+    parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
+                        default=CPU_CORES_MAX)
 
     argv = parser.parse_args()
 
     # test all the models
     permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads, skeleton=argv.skeleton,
-                    no_admix=argv.no_admix)
+                    no_admix=argv.no_admix, max_outlier=argv.max_outlier, print_offset=argv.print_offset)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
