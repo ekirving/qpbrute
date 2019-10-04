@@ -38,7 +38,8 @@ class QPBrute:
     # print PDFs for graphs with (N - offset) nodes
     REMAINING_PRINT_OFFSET = 0
 
-    def __init__(self, par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton):
+    def __init__(self, par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
+                 no_admix):
         """
         Initialise the object attributes 
         """
@@ -48,6 +49,7 @@ class QPBrute:
         self.verbose = verbose
         self.nthreads = int(nthreads)
         self.skeleton = skeleton
+        self.no_admix = no_admix
 
         # should we try all possible graphs, or should we stop when we find something reasonable
         self.exhaustive_search = exhaustive
@@ -105,7 +107,7 @@ class QPBrute:
         node_placed = self.check_results(results, remaining, depth)
 
         # test all the admixture possibilities
-        if not node_placed:
+        if not node_placed and not self.no_admix:
 
             admix_trees = []
 
@@ -457,7 +459,7 @@ class QPBrute:
         newick = newick.replace(':0.00000', '').strip()
 
         # get the order of admix nodes in the tree
-        order = list(OrderedDict.fromkeys(re.findall('a\d+', newick)))
+        order = list(OrderedDict.fromkeys(re.findall('a[0-9]+', newick)))
 
         # normalise the node numbering
         for i, old in enumerate(order):
@@ -512,7 +514,8 @@ class NodeUnplaceable(Exception):
     pass
 
 
-def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX, skeleton=None):
+def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX,
+                    skeleton=None, no_admix=False):
     """
     Find the best fitting graph for a given set of nodes, by permuting all possible graphs.
     """
@@ -526,7 +529,8 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
         os.remove(log_file)
 
     # instantiate the class
-    pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton)
+    pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
+                 no_admix)
 
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
@@ -536,6 +540,9 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
 
     pq.log("INFO: There are {:,} possible starting orders for the given nodes.".format(len(all_nodes_perms)))
     pq.log("INFO: Performing %s search." % ("an exhaustive" if pq.exhaustive_search else "a heuristic"))
+
+    # remove the starting set (so we don't do it twice)
+    all_nodes_perms.remove(tuple(nodes))
 
     # keep looping until we find a solution, or until we've exhausted all possible starting orders
     while not pq.solutions or pq.exhaustive_search:
@@ -578,10 +585,12 @@ if __name__ == "__main__":
     parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
                         default=CPU_CORES_MAX)
     parser.add_argument("--skeleton", help="A skeleton model to add all other nodes to", metavar='FILE')
+    parser.add_argument("--no_admix", help="Do not insert new nodes with admixture branches", action='store_true')
 
     argv = parser.parse_args()
 
     # test all the models
-    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads, skeleton=argv.skeleton)
+    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads, skeleton=argv.skeleton,
+                    no_admix=argv.no_admix)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
