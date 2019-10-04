@@ -38,7 +38,7 @@ class QPBrute:
     # print PDFs for graphs with (N - offset) nodes
     REMAINING_PRINT_OFFSET = 0
 
-    def __init__(self, par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads):
+    def __init__(self, par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton):
         """
         Initialise the object attributes 
         """
@@ -47,6 +47,7 @@ class QPBrute:
         self.pdf_path = pdf_path
         self.verbose = verbose
         self.nthreads = int(nthreads)
+        self.skeleton = skeleton
 
         # should we try all possible graphs, or should we stop when we find something reasonable
         self.exhaustive_search = exhaustive
@@ -484,18 +485,24 @@ class QPBrute:
         """
         Build and test all possible trees and graphs
         """
-
         self.log('INFO: Starting list %s' % self.nodes)
 
-        # setup a simple 2-node tree
-        root_node = ElemTree.Element(self.root_node)
-        root_tree = ElemTree.ElementTree(root_node)
+        if self.skeleton:
+            # load the skeleton tree
+            root_tree = ElemTree.parse(self.skeleton)
 
-        ElemTree.SubElement(root_node, self.outgroup)
-        ElemTree.SubElement(root_node, self.nodes[0])
+            # recursively add all the other nodes
+            self.recurse_tree(root_tree, self.nodes[0], self.nodes[1:] if len(self.nodes) > 1 else [])
+        else:
+            # setup a simple 2-node tree
+            root_node = ElemTree.Element(self.root_node)
+            root_tree = ElemTree.ElementTree(root_node)
 
-        # recursively add all the other nodes
-        self.recurse_tree(root_tree, self.nodes[1], self.nodes[2:])
+            ElemTree.SubElement(root_node, self.outgroup)
+            ElemTree.SubElement(root_node, self.nodes[0])
+
+            # recursively add all the other nodes
+            self.recurse_tree(root_tree, self.nodes[1], self.nodes[2:])
 
 
 class NodeUnplaceable(Exception):
@@ -505,7 +512,7 @@ class NodeUnplaceable(Exception):
     pass
 
 
-def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX):
+def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX, skeleton=None):
     """
     Find the best fitting graph for a given set of nodes, by permuting all possible graphs.
     """
@@ -519,7 +526,7 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
         os.remove(log_file)
 
     # instantiate the class
-    pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads)
+    pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton)
 
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
@@ -570,10 +577,11 @@ if __name__ == "__main__":
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
     parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
                         default=CPU_CORES_MAX)
+    parser.add_argument("--skeleton", help="A skeleton model to add all other nodes to", metavar='FILE')
 
     argv = parser.parse_args()
 
     # test all the models
-    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads)
+    permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads, skeleton=argv.skeleton)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
