@@ -28,6 +28,7 @@ seedms
 # ignore test data
 *pygmy*
 *socotra*
+*africa*
 
 # node colours
 nodes.list

@@ -14,7 +14,7 @@ import argparse
 
 from time import time
 from datetime import timedelta
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from cStringIO import StringIO
 from Bio import Phylo
 
@@ -33,7 +33,7 @@ from consts import *
 class QPBrute:
 
     def __init__(self, par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
-                 no_admix, max_outlier, print_offset):
+                 qpgraph, no_admix, max_outlier, print_offset):
         """
         Initialise the object attributes 
         """
@@ -43,6 +43,7 @@ class QPBrute:
         self.verbose = verbose
         self.nthreads = int(nthreads)
         self.skeleton = skeleton
+        self.qpgraph = qpgraph
         self.no_admix = no_admix
         self.max_outlier = int(max_outlier)
         self.print_offset = int(print_offset)
@@ -418,6 +419,113 @@ class QPBrute:
 
         return graph
 
+    def import_qpgraph(self, graph_file):
+        """
+        Convert a qpGraph model into ElementTree format
+        """
+        root, labels, edges, admixes = self.parse_qpgraph(graph_file)
+
+        added_a = []
+        added_i = []
+
+        # construct the ElementTree
+        root_node = ElemTree.Element(self.root_node)
+        root_tree = ElemTree.ElementTree(root_node)
+
+        # recursively insert the nodes
+        self.insert_qpgraph_nodes(root, root_node, labels, edges, admixes, added_a, added_i)
+
+        return root_tree
+
+    def insert_qpgraph_nodes(self, parent, parent_elem, labels, edges, admixes, added_a, added_i):
+        """
+        Recursively insert the qpgraph nodes
+        """
+        for child in edges[parent]:
+            # add all the child nodes
+            if child in labels:
+                if child in edges:
+                    raise RuntimeError("ERROR: Sampled populations cannot have direct descendents ({} -> {})"
+                                       .format(child, edges[child]))
+                # leaf node
+                ElemTree.SubElement(parent_elem, labels[child])
+            else:
+                if child in admixes:
+                    # admixture node
+                    if child not in added_a:
+                        added_a.append(child)
+                        side = 'l'
+                    else:
+                        side = 'r'
+
+                    name = 'a{}'.format(added_a.index(child) + 1)
+                    attrs = [('internal', '1'), ('admix', '1'), ('side', side)]
+                else:
+                    # internal node
+                    if len(edges[child]) == 1:
+                        # skip drift branches in the qpGraph model, as we add these automatically on export
+                        self.insert_qpgraph_nodes(child, parent_elem, labels, edges, admixes, added_a, added_i)
+                        continue
+
+                    added_i.append(child)
+                    name = 'n{}'.format(added_i.index(child) + 1)
+                    attrs = [('internal', '1')]
+
+
+                child_elem = ElemTree.SubElement(parent_elem, name)
+                for key, val in attrs:
+                    child_elem.set(key, val)
+
+                # don't recurse on duplicated admixture nodes
+                if child_elem.get('side') != 'r':
+                    self.insert_qpgraph_nodes(child, child_elem, labels, edges, admixes, added_a, added_i)
+
+    @staticmethod
+    def parse_qpgraph(graph_file):
+        """
+        Parse the elements of a qpGraph model
+        """
+        labels = {}
+        edges = defaultdict(list)
+        admixes = []
+
+        # parse the contents of the graph file
+        with open(graph_file, 'r') as fin:
+            for line in fin:
+                # root node
+                m = re.match(r'^root\s+(\w+)$', line)
+                if m is not None:
+                    root = m.group(1)
+                    continue
+
+                # tip labels
+                m = re.match(r'^label\s+(\w+)\s+(\w+)$', line)
+                if m is not None:
+                    label, alias = m.groups()
+                    labels[alias] = label
+                    continue
+
+                # normal edges
+                m = re.match(r'^edge\s+(\w+)\s+(\w+)\s+(\w+)$', line)
+                if m is not None:
+                    _, parent, child = m.groups()
+                    edges[parent].append(child)
+                    continue
+
+                # admixture edges
+                m = re.match(r'^admix\s+(\w+)\s+(\w+)\s+(\w+)\s+(\d+)\s+(\d+)$', line)
+                if m is not None:
+                    child, parent1, parent2, _, _ = m.groups()
+                    edges[parent1].append(child)
+                    edges[parent2].append(child)
+                    admixes.append(child)
+                    continue
+
+                if line != '':
+                    raise RuntimeError("Invalid line found in {}".format(graph_file))
+
+        return root, labels, edges, admixes
+
     @staticmethod
     def hash_text(text, length=7):
         """
@@ -488,9 +596,9 @@ class QPBrute:
         """
         self.log('INFO: Starting list %s' % self.nodes)
 
-        if self.skeleton:
-            # load the skeleton tree
-            root_tree = ElemTree.parse(self.skeleton)
+        if self.skeleton or self.qpgraph:
+            # load the skeleton tree / grpah
+            root_tree = ElemTree.parse(self.skeleton) if self.skeleton else self.import_qpgraph(self.qpgraph)
 
             # recursively add all the other nodes
             self.recurse_tree(root_tree, self.nodes[0], self.nodes[1:] if len(self.nodes) > 1 else [])
@@ -514,7 +622,7 @@ class NodeUnplaceable(Exception):
 
 
 def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=True, nthreads=CPU_CORES_MAX,
-                    skeleton=None, no_admix=False, max_outlier=0, print_offset=0):
+                    skeleton=None, qpgraph=None, no_admix=False, max_outlier=0, print_offset=0):
     """
     Find the best fitting graph for a given set of nodes, by permuting all possible graphs.
     """
@@ -529,7 +637,7 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
 
     # instantiate the class
     pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
-                 no_admix, max_outlier, print_offset)
+                 qpgraph, no_admix, max_outlier, print_offset)
 
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
@@ -582,6 +690,7 @@ if __name__ == "__main__":
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
     parser.add_argument("--skeleton", help="A skeleton model to add all other nodes to", metavar='FILE')
+    parser.add_argument("--qpgraph", help="A qpgraph model to add all other nodes to", metavar='FILE')
     parser.add_argument("--no_admix", help="Do not insert new nodes with admixture branches", action='store_true')
     parser.add_argument("--max_outlier", help="How many outliers are permitted before pruning a graph", metavar='NUM',
                         default=0)
@@ -594,6 +703,7 @@ if __name__ == "__main__":
 
     # test all the models
     permute_qpgraph(argv.par, argv.prefix, argv.pops, argv.out, nthreads=argv.threads, skeleton=argv.skeleton,
-                    no_admix=argv.no_admix, max_outlier=argv.max_outlier, print_offset=argv.print_offset)
+                    qpgraph=argv.qpgraph, no_admix=argv.no_admix, max_outlier=argv.max_outlier,
+                    print_offset=argv.print_offset)
 
     print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
