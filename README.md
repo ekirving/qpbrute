@@ -34,7 +34,18 @@ If you reuse any of this code then please cite the papers:
 
 ## Installation
 
-To use this software you will need to install the following dependencies.
+To use this software you will need to install various dependencies.
+
+The easiest way to install the dependencies is via the [conda package manager](
+https://docs.conda.io/projects/conda/en/latest/index.html):
+```bash
+conda env create --name qpbrute --file environment.yaml
+```
+```bash
+conda activate qpbrute
+```
+
+Alternatively, you can install all the dependencies manually via pip and CRAN.
 
 ### Python
 
@@ -84,6 +95,7 @@ install.packages(c("admixturegraph", "coda", "data.table", "ggplot2", "gtools", 
 ```R
 install_github("sbfnk/fitR")
 ```
+
 
 ### Other
 

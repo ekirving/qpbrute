@@ -1,0 +1,29 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - ekirving
+dependencies:
+  - python=2.7.17
+  - biopython=1.68
+  - graph-tool=2.29
+  - matplotlib=2.2.3
+  - numpy=1.16.5
+  - pandas=0.24.2
+  - pathos=0.2.5
+  - python-graphviz-0.13.2
+  - scipy=1.2.1
+  - r-base=3.6.1
+  - r-admixturegraph=1.0.2
+  - r-coda=0.19_3
+  - r-data.table=1.12.8
+  - r-fitr=0.1
+  - r-ggplot2=3.2.1
+  - r-gtools=3.8.1
+  - r-neldermead=1.0_11
+  - r-optimsimplex=1.0_7
+  - r-raster=3.0_7
+  - r-reshape2=1.4.3
+  - r-scales=1.1.0
+  - r-stringr=1.4.0
+  - r-viridis=0.5.1
