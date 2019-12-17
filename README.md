@@ -117,6 +117,10 @@ source ~/.bash_profile
 Note: qpBrute is designed to work exclusively from inside the root folder of the project. Please do not attempt to run
 either `qpbrute.py` or `qpbayes.py` from other locations. 
 
+Note: The size of the graph space grows super exponentially with each additional population, so the maximum number of 
+population supported by qpBrute in a full search is 7. However, you can use the `--no_admix` and `--qpgraph` paremeters
+to reduce the size of the search space and add many more populations in an iterative fashion.
+
 ***
 
 The pipeline is broken into two steps:

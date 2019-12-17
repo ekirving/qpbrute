@@ -639,6 +639,9 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
     pq = QPBrute(par_file, log_file, dot_path, pdf_path, nodes, outgroup, exhaustive, verbose, nthreads, skeleton,
                  qpgraph, no_admix, max_outlier, print_offset)
 
+    if len(nodes) > 7:
+        raise RuntimeError("ERROR: Maximum number of populations is 7 (n={})".format(len(nodes)))
+
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
 
