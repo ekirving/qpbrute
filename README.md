@@ -131,6 +131,23 @@ python qpbrute.py \
     --out Out
 ```
 
+#### Adding populations to an existing qpGraph model
+
+Sometimes you already have a base model which you just want to add extra populations to (i.e. use `--pops` to specify the new populations).
+
+```bash
+python qpbrute.py \
+    --par test/sim1.par \
+    --prefix sim1 \
+    --pops Y Z \
+    --out Out \
+    --qpgraph path/to/model
+```
+
+You can also use the `--no_admix` flag to create a skeleton tree containing populations you know are not admixed, and 
+use this model as input with the `--qpgraph` parameter. This allows you to create large models with many more 
+populations than can be fully explored via a brute force approach.
+
 ### Calculating Bayes Factors 
  
 ```bash
