@@ -285,7 +285,8 @@ class QPBrute:
                 fout.write(graph)
 
             # run qpGraph
-            log = run_cmd(["qpGraph", "-p", self.par_file, "-g", grp_file, "-d", dot_file])
+            log = run_cmd(["qpGraph", "-p", self.par_file, "-g", grp_file, "-d", dot_file],
+                          env={'OMP_NUM_THREADS': '1'})
 
             # save the log file
             with open(log_file, 'w') as fout:
