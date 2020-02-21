@@ -11,7 +11,7 @@ dependencies:
   - numpy=1.16.5
   - pandas=0.24.2
   - pathos=0.2.5
-  - python-graphviz-0.13.2
+  - python-graphviz=0.13.2
   - scipy=1.2.1
   - r-base=3.6.1
   - r-admixturegraph=1.0.2
