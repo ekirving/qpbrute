@@ -28,7 +28,7 @@ from consts import *
 
 class QPBayes:
 
-    def __init__(self, geno, snp, ind, prefix, nodes, outgroup, verbose, nthreads):
+    def __init__(self, geno, snp, ind, prefix, nodes, outgroup, chains, heated, iterations, burnin, verbose, nthreads):
         """
         Initialise the object attributes
         """
@@ -38,6 +38,10 @@ class QPBayes:
         self.prefix = prefix
         self.nodes = nodes
         self.outgroup = outgroup
+        self.mcmc_chains = int(chains)
+        self.mcmc_heated = int(heated)
+        self.mcmc_iters = int(float(iterations))
+        self.mcmc_burn = int(float(burnin))
         self.verbose = verbose
         self.nthreads = int(nthreads)
 
@@ -166,10 +170,10 @@ class QPBayes:
                      self.prefix,
                      graph,
                      self.dstat_csv,
-                     MCMC_NUM_CHAINS,
-                     MCMC_NUM_TEMPS,
-                     MCMC_NUM_ITERS,
-                     MCMC_NUM_BURN], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
+                     self.mcmc_chains,
+                     self.mcmc_heated,
+                     self.mcmc_iters,
+                     self.mcmc_burn], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
@@ -185,14 +189,18 @@ class QPBayes:
                  MCMC_NUM_BURN], stdout=open(log_file, 'w'))
 
 
-def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, verbose=True, nthreads=CPU_CORES_HIGH):
+def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, chains, heated, iterations, burnin, verbose=True,
+                            nthreads=CPU_CORES_HIGH):
     """
     Find the best fitting graph by calculating the Bayes factors for each model found by QPBrute.
     """
     start = time()
 
     # instantiate the class
-    qpb = QPBayes(geno, snp, ind, prefix, nodes, outgroup, verbose, nthreads)
+    qpb = QPBayes(geno, snp, ind, prefix, nodes, outgroup, chains, heated, iterations, burnin, verbose, nthreads)
+
+    if burnin >= iterations:
+        raise RuntimeError("ERROR: MCMC burnin must be less than the number of iterations")
 
     # calculate outgroup D-stats for all 3-way permutations of the populations
     qpb.calculate_dstats()
@@ -215,9 +223,18 @@ if __name__ == "__main__":
     parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
     parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
     parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
+    parser.add_argument("--chains", help="Number of replicate MCMC chains to run (default: %s)" % MCMC_NUM_CHAINS,
+                        metavar='NUM', default=MCMC_NUM_CHAINS)
+    parser.add_argument("--heated", help="Number of heated  chains per replicate (default: %s)" % MCMC_NUM_TEMPS,
+                        metavar='NUM', default=MCMC_NUM_TEMPS)
+    parser.add_argument("--iterations", help="Number of MCMC iterations per chain (default: %.1e)" % MCMC_NUM_ITERS,
+                        metavar='NUM', default=MCMC_NUM_ITERS)
+    parser.add_argument("--burnin",     help="Number of MCMC iterations to burnin (default: %.1e)" % MCMC_NUM_BURN,
+                        metavar='NUM', default=MCMC_NUM_BURN)
     parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
                         default=CPU_CORES_MAX)
 
     argv = parser.parse_args()
 
-    calculate_bayes_factors(argv.geno, argv.snp, argv.ind, argv.prefix, argv.pops, argv.out, nthreads=argv.threads)
+    calculate_bayes_factors(argv.geno, argv.snp, argv.ind, argv.prefix, argv.pops, argv.out, argv.chains, argv.heated,
+                            argv.iterations, argv.burnin, nthreads=argv.threads)
