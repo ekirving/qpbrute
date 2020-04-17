@@ -514,16 +514,16 @@ class QPBrute:
                     continue
 
                 # admixture edges
-                m = re.match(r'^admix\s+(\w+)\s+(\w+)\s+(\w+)\s+(\d+)\s+(\d+)$', line)
+                m = re.match(r'^admix\s+(\w+)\s+(\w+)\s+(\w+)(\s+(\d+)\s+(\d+))?$', line)
                 if m is not None:
-                    child, parent1, parent2, _, _ = m.groups()
+                    child, parent1, parent2 = m.groups()[0:3]
                     edges[parent1].append(child)
                     edges[parent2].append(child)
                     admixes.append(child)
                     continue
 
                 if line != '':
-                    raise RuntimeError("Invalid line found in {}".format(graph_file))
+                    raise RuntimeError("Invalid line found in {}\n{}".format(graph_file, line))
 
         return root, labels, edges, admixes
 
