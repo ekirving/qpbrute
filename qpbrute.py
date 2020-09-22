@@ -60,7 +60,7 @@ class QPBrute:
         self.nodes = nodes
         self.outgroup = outgroup
 
-        self.root_node = 'R'
+        self.root_node = ROOT_NODE
         self.problem_nodes = []
         self.tested_graphs = set()
         self.solutions = set()
@@ -588,7 +588,7 @@ class QPBrute:
         else:
             children = [(child_node.tag, QPBrute.export_newick_tree(child_node)) for child_node in parent_node]
             children.sort()
-            tag_name = '' if re.match('n[0-9]+|R', parent_node.tag) else parent_node.tag
+            tag_name = '' if re.match('n[0-9]+|' + ROOT_NODE, parent_node.tag) else parent_node.tag
             return '(' + ','.join(node for tag, node in children) + ')%s' % tag_name
 
     def find_graph(self):
@@ -642,6 +642,9 @@ def permute_qpgraph(par_file, prefix, nodes, outgroup, exhaustive=True, verbose=
 
     if len(nodes) > 7:
         raise RuntimeError("ERROR: Maximum number of populations is 7 (n={})".format(len(nodes)))
+
+    if ROOT_NODE in nodes:
+        raise RuntimeError("ERROR: '{}' is a reserved name for the root of the graph".format(ROOT_NODE))
 
     # get all the permutations of possible node orders
     all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
