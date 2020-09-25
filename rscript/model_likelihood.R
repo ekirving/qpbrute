@@ -121,7 +121,7 @@ run_chain <- function(i, num_iters) {
     fullchain.file = paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv')
 
     # check if the chain exists
-    if (file.exists(fullchain.file)) {
+    if (file.exists(fullchain.file) && file.info(fullchain.file)$size > 0) {
 
         cat("Loading chain: ", i, "\n")
         chain.prev <- fread(fullchain.file, header = T, sep = ',')
