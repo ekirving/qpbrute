@@ -528,7 +528,7 @@ class QPBrute:
         return root, labels, edges, admixes
 
     @staticmethod
-    def hash_text(text, length=7):
+    def hash_text(text, length=12):
         """
         Generate a unique key by hashing a string
         """
