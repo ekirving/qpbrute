@@ -49,24 +49,10 @@ Alternatively, you can install all the dependencies manually via pip and CRAN.
 
 ### Python
 
-Python ≥ 3.x with the following modules:
-
-* [biopython](https://github.com/biopython/biopython)
-* [graph-tool](https://github.com/antmd/graph-tool)
-* [graphviz](https://github.com/xflr6/graphviz)
-* [matplotlib](https://github.com/matplotlib/matplotlib)
-* [numpy](https://github.com/numpy/numpy)
-* [pandas](https://github.com/pandas-dev/pandas)
-* [pathos](https://github.com/uqfoundation/pathos)
-* [scipy](https://github.com/scipy/scipy)
-
+Python ≥ 3.6 and pip:
 
 ```bash
-pip install biopython graphviz matplotlib numpy pandas pathos scipy
-```
-
-```bash
-brew install graph-tool
+pip install https://github.com/ekirving/qpbrute.git
 ```
 
 The full list of Python modules installed in the project environment can be
@@ -114,11 +100,8 @@ source ~/.bash_profile
  
 ## Running the pipeline
 
-Note: qpBrute is designed to work exclusively from inside the root folder of the project. Please do not attempt to run
-either `qpbrute.py` or `qpbayes.py` from other locations. 
-
 Note: The size of the graph space grows super exponentially with each additional population, so the maximum number of 
-population supported by qpBrute in a full search is 7. However, you can use the `--no_admix` and `--qpgraph` parameters
+population supported by qpBrute in a full search is 7. However, you can use the `--no-admix` and `--qpgraph` parameters
 to reduce the size of the search space and add many more populations in an iterative fashion.
 
 ***
@@ -128,7 +111,7 @@ The pipeline is broken into two steps:
 ### Fitting qpGraph models
 
 ```bash
-python qpbrute.py \
+qpBrute \
     --par test/sim1.par \
     --prefix sim1 \
     --pops A B C X \
@@ -140,7 +123,7 @@ python qpbrute.py \
 Sometimes you already have a base model which you just want to add extra populations to (i.e. use `--pops` to specify the new populations).
 
 ```bash
-python qpbrute.py \
+qpBrute \
     --par test/sim1.par \
     --prefix sim1 \
     --pops Y Z \
@@ -148,14 +131,14 @@ python qpbrute.py \
     --qpgraph path/to/model
 ```
 
-You can also use the `--no_admix` flag to create a skeleton tree containing populations you know are not admixed, and 
+You can also use the `--no-admix` flag to create a skeleton tree containing populations you know are not admixed, and 
 use this model as input with the `--qpgraph` parameter. This allows you to create large models with many more 
 populations than can be fully explored via a brute force approach.
 
 ### Calculating Bayes Factors 
  
 ```bash
-python qpbayes.py \
+qpBayes \
     --geno test/sim1.geno \
     --ind test/sim1.ind \
     --snp test/sim1.snp \
