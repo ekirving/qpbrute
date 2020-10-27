@@ -36,10 +36,10 @@ If you reuse any of this code then please cite the papers:
 
 To use this software you will need to install various dependencies.
 
-The easiest way to install the dependencies is via the [conda package manager](
+The easiest way to install qpBrute and all the dependencies is via the [conda package manager](
 https://docs.conda.io/projects/conda/en/latest/index.html):
 ```bash
-conda env create --name qpbrute --file environment.yaml
+conda env create --name qpbrute --file https://raw.githubusercontent.com/ekirving/qpbrute/python3/environment.yaml
 ```
 ```bash
 conda activate qpbrute
