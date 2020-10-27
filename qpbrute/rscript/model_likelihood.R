@@ -127,7 +127,7 @@ run_chain <- function(i, num_iters) {
     chain.prev <- NULL
     chain.new <- NULL
 
-    fullchain.file = paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv')
+    fullchain.file <- paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv')
 
     # check if the chain exists
     if (file.exists(fullchain.file) && file.info(fullchain.file)$size > 0) {
@@ -239,7 +239,7 @@ for (i in 1:num_chains) {
 cat("\n\n", "--------------", "\n\n")
 cat("Analysing combined chains.", "\n\n")
 
-chains.all = mcmc.list(chains)
+chains.all <- mcmc.list(chains)
 
 # print the summary stats
 print(summary(chains.all))

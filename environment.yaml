@@ -3,6 +3,7 @@ channels:
   - bioconda
   - ekirving
 dependencies:
+  - admixtools=6.0
   - biopython=1.78
   - graph-tool=2.35
   - matplotlib=3.3.2

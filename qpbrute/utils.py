@@ -15,7 +15,7 @@ import subprocess
 
 import graphviz
 
-from consts import COLOURS
+from qpbrute.consts import COLOURS
 
 
 def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False):
@@ -58,7 +58,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
 
         # decode return codes
         if proc.returncode == 139:
-            err = "Segmentation fault (core dumped) " + err
+            err = f"Segmentation fault (core dumped) {err}"
 
         raise RuntimeError(err)
 

@@ -4,7 +4,7 @@ This repository contains Python code for automatically fitting admixture graphs
 to iteratively fit increasingly complex models, and R code for calculating Bayes factors 
 (with [admixturegraph](https://github.com/mailund/admixture_graph)) to compare the fitted models.
 
-![sim1](./test/sim1.png?raw=true) 
+![sim1](qpbrute/test/sim1.png?raw=true) 
 
 The heuristic search algorithm was first described in the paper 
 [The evolutionary history of dogs in the Americas](https://doi.org/10.1126/science.aao4776). The code was subsequently
@@ -49,7 +49,7 @@ Alternatively, you can install all the dependencies manually via pip and CRAN.
 
 ### Python
 
-Python ≥ 2.7 with the following modules:
+Python ≥ 3.x with the following modules:
 
 * [biopython](https://github.com/biopython/biopython)
 * [graph-tool](https://github.com/antmd/graph-tool)
@@ -70,7 +70,7 @@ brew install graph-tool
 ```
 
 The full list of Python modules installed in the project environment can be
-found in the `requirement.txt` file.
+found in the `requirements.txt` file.
 
 ### R
 
@@ -118,7 +118,7 @@ Note: qpBrute is designed to work exclusively from inside the root folder of the
 either `qpbrute.py` or `qpbayes.py` from other locations. 
 
 Note: The size of the graph space grows super exponentially with each additional population, so the maximum number of 
-population supported by qpBrute in a full search is 7. However, you can use the `--no_admix` and `--qpgraph` paremeters
+population supported by qpBrute in a full search is 7. However, you can use the `--no_admix` and `--qpgraph` parameters
 to reduce the size of the search space and add many more populations in an iterative fashion.
 
 ***

@@ -25,8 +25,8 @@ from time import time
 import pathos.multiprocessing as mp
 from Bio import Phylo
 
-from consts import ROOT_NODE, CPU_CORES_MAX
-from utils import run_cmd, pprint_qpgraph
+from qpbrute.consts import ROOT_NODE, CPU_CORES_MAX
+from qpbrute.utils import run_cmd, pprint_qpgraph
 
 
 class QPBrute:
@@ -824,7 +824,7 @@ def permute_qpgraph(
     return pq.solutions
 
 
-if __name__ == "__main__":
+def qpbrute():
     start = time()
 
     # parse the command line arguments
@@ -894,3 +894,7 @@ if __name__ == "__main__":
     )
 
     print("INFO: Permute execution took: %s" % timedelta(seconds=time() - start))
+
+
+if __name__ == "__main__":
+    qpbrute()

@@ -21,7 +21,7 @@ from time import time
 import pandas as pd
 import pathos.multiprocessing as mp
 
-from consts import (
+from qpbrute.consts import (
     MCMC_NUM_BURN,
     CPU_CORES_HIGH,
     MCMC_NUM_CHAINS,
@@ -29,7 +29,7 @@ from consts import (
     MCMC_NUM_ITERS,
     CPU_CORES_MAX,
 )
-from utils import run_cmd
+from qpbrute.utils import run_cmd
 
 
 class QPBayes:
@@ -283,7 +283,7 @@ def calculate_bayes_factors(
     )
 
 
-if __name__ == "__main__":
+def qpbayes():
     # parse the command line arguments
     parser = argparse.ArgumentParser(
         description="Compare all fitted models to each other using Bayes factors."
@@ -365,3 +365,7 @@ if __name__ == "__main__":
         argv.burnin,
         threads=argv.threads,
     )
+
+
+if __name__ == "__main__":
+    qpbayes()

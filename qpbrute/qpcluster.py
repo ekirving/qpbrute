@@ -25,7 +25,7 @@ from graph_tool import *
 from graph_tool.topology import *
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 
-from consts import CPU_CORES_MAX
+from qpbrute.consts import CPU_CORES_MAX
 
 
 class QPCluster:
@@ -254,7 +254,7 @@ def pprint_dendrogram(*args, **kwargs):
     return dendro
 
 
-if __name__ == "__main__":
+def qpcluster():
     start = time()
 
     # parse the command line arguments
@@ -277,3 +277,7 @@ if __name__ == "__main__":
     cluster_qpgraph(graphs, argv.prefix)
 
     print("INFO: Cluster execution took: %s" % timedelta(seconds=time() - start))
+
+
+if __name__ == "__main__":
+    qpcluster()
