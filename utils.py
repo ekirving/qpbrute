@@ -26,7 +26,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
 
     # print the command
     if verbose:
-        print(u' '.join(cmd))
+        print(u" ".join(cmd))
 
     # handle custom environment variables
     local_env = os.environ
@@ -37,7 +37,9 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
     stderr = subprocess.PIPE if not stderr else stderr
 
     # run the command
-    proc = subprocess.Popen(cmd, shell=shell, stdout=stdout, stderr=stderr, env=local_env)
+    proc = subprocess.Popen(
+        cmd, shell=shell, stdout=stdout, stderr=stderr, env=local_env
+    )
 
     # fetch any output and error
     (out, err) = proc.communicate()
@@ -47,7 +49,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
 
         # decode return codes
         if proc.returncode == 139:
-            err = 'Segmentation fault (core dumped) ' + err
+            err = "Segmentation fault (core dumped) " + err
 
         raise RuntimeError(err)
 
@@ -55,7 +57,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
 
 
 def trim_ext(fullpath, n=1):
-    return '.'.join(fullpath.split('.')[:-n])
+    return ".".join(fullpath.split(".")[:-n])
 
 
 def pprint_qpgraph(dot_file, pdf_file):
@@ -66,25 +68,25 @@ def pprint_qpgraph(dot_file, pdf_file):
     import re
 
     # extract the body contents from the dot file
-    with open(dot_file, 'rU') as fin:
+    with open(dot_file, "rU") as fin:
         body = re.search("{(.+)}", fin.read(), re.DOTALL).group(1).strip().split("\n")
 
     # make a new direct graph
-    dot = graphviz.Digraph(filename=trim_ext(pdf_file), body=body, format='pdf')
+    dot = graphviz.Digraph(filename=trim_ext(pdf_file), body=body, format="pdf")
 
     # remove the messy graph label
-    dot.attr('graph', label='')
+    dot.attr("graph", label="")
 
     # set Node defaults
-    dot.node_attr['shape'] = 'point'
-    dot.node_attr['fontname'] = 'arial'
-    dot.node_attr['fontsize'] = '11'
+    dot.node_attr["shape"] = "point"
+    dot.node_attr["fontname"] = "arial"
+    dot.node_attr["fontsize"] = "11"
 
     # set Edge defaults
-    dot.edge_attr['arrowhead'] = 'vee'
-    dot.edge_attr['fontcolor'] = '#838b8b'  # grey
-    dot.edge_attr['fontname'] = 'arial'
-    dot.edge_attr['fontsize'] = '11'
+    dot.edge_attr["arrowhead"] = "vee"
+    dot.edge_attr["fontcolor"] = "#838b8b"  # grey
+    dot.edge_attr["fontname"] = "arial"
+    dot.edge_attr["fontsize"] = "11"
 
     nodes = []
 
@@ -99,14 +101,14 @@ def pprint_qpgraph(dot_file, pdf_file):
 
     try:
         # load the optional colour file
-        colours = dict(csv.reader(open('nodes.list', 'r'), delimiter='\t'))
+        colours = dict(csv.reader(open("nodes.list", "r"), delimiter="\t"))
     except IOError:
         colours = {}
 
     # set leaf node attributes
     for idx, node in enumerate(nodes):
         colour = colours.get(node, COLOURS[idx])
-        dot.node(node, shape='ellipse', color=colour, fontcolor=colour)
+        dot.node(node, shape="ellipse", color=colour, fontcolor=colour)
 
     # render the graph (basename.pdf)
     dot.render(cleanup=True)

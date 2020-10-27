@@ -27,8 +27,21 @@ from consts import *
 
 
 class QPBayes:
-
-    def __init__(self, geno, snp, ind, prefix, nodes, outgroup, chains, heated, iterations, burnin, verbose, nthreads):
+    def __init__(
+        self,
+        geno,
+        snp,
+        ind,
+        prefix,
+        nodes,
+        outgroup,
+        chains,
+        heated,
+        iterations,
+        burnin,
+        verbose,
+        threads,
+    ):
         """
         Initialise the object attributes
         """
@@ -43,28 +56,31 @@ class QPBayes:
         self.mcmc_iters = int(float(iterations))
         self.mcmc_burn = int(float(burnin))
         self.verbose = verbose
-        self.nthreads = int(nthreads)
+        self.threads = int(threads)
 
         # sanity check the outgroup is not in the node list
         if outgroup in nodes:
             self.nodes.remove(outgroup)
 
         # find all the PDFs, and extract their graph names
-        self.graphs = [re.search(r'a[0-9]-(.+).pdf', pdf).group(1) for pdf in glob.glob('pdf/{}*'.format(prefix))]
+        self.graphs = [
+            re.search(r"a[0-9]-(.+).pdf", pdf).group(1)
+            for pdf in glob.glob("pdf/{}*".format(prefix))
+        ]
 
         # self.dot_path = 'graphs/{}'.format(prefix)
         self.dstat_par = "dstats/{}.par".format(prefix)
         self.dstat_csv = "dstats/{}.csv".format(prefix)
         self.dstat_log = "dstats/{}.log".format(prefix)
         self.dstat_tests = "dstats/{}.tests".format(prefix)
-        self.bayes_log = '{}.bayes.log'.format(prefix)
+        self.bayes_log = "{}.bayes.log".format(prefix)
 
         # clean up the log file
         if os.path.exists(self.bayes_log):
             os.remove(self.bayes_log)
 
         # open the log file for writing
-        self.log_handle = open(self.bayes_log, 'a')
+        self.log_handle = open(self.bayes_log, "a")
 
     def log(self, message):
         """
@@ -92,7 +108,7 @@ class QPBayes:
 
         # get all the samples, grouped by population
         samples = defaultdict(list)
-        with open(self.ind_file, 'r') as fin:
+        with open(self.ind_file, "r") as fin:
             for line in fin.readlines():
                 sample, gender, population = line.split()
                 samples[population].append(sample)
@@ -103,38 +119,44 @@ class QPBayes:
             tests.add((self.outgroup, x, y, z))
 
         # write all the tests to disk
-        with open(self.dstat_tests, 'w') as fout:
-            fout.writelines(' '.join(test) + '\n' for test in tests)
+        with open(self.dstat_tests, "w") as fout:
+            fout.writelines(" ".join(test) + "\n" for test in tests)
 
         # compose the config settings
         config = [
             "genotypename: {}".format(self.geno_file),
             "snpname:      {}".format(self.snp_file),
             "indivname:    {}".format(self.ind_file),
-            "popfilename:  {}".format(self.dstat_tests),  # Program will run the method for all listed 4-way tests
-            "blgsize:      0.005"                        # TODO parameterise
-            "f4mode:       YES"                          # TODO f4 statistics not D-stats are computed
+            "popfilename:  {}".format(
+                self.dstat_tests
+            ),  # Program will run the method for all listed 4-way tests
+            "blgsize:      0.005"  # TODO parameterize
+            "f4mode:       YES",  # TODO f4 statistics not D-stats are computed
         ]
 
         # the params to be defined in a .par file
-        with open(self.dstat_par, 'w') as fout:
+        with open(self.dstat_par, "w") as fout:
             fout.write("\n".join(config))
 
-        self.log("INFO: There are {:,} D-stat tests to compute for {} populations.".format(len(tests), len(self.nodes)))
+        self.log(
+            "INFO: There are {:,} D-stat tests to compute for {} populations.".format(
+                len(tests), len(self.nodes)
+            )
+        )
 
         # run qpDstat
         log = run_cmd(["qpDstat", "-p", self.dstat_par])
 
         # save the log file
-        with open(self.dstat_log, 'w') as fout:
+        with open(self.dstat_log, "w") as fout:
             fout.write(log)
 
         results = list()
-        columns = ['W', 'X', 'Y', 'Z', 'D', 'Z.value']
+        columns = ["W", "X", "Y", "Z", "D", "Z.value"]
 
         # parse the results from the log file
         for line in log.splitlines():
-            if 'result:' in line:
+            if "result:" in line:
                 results.append(dict(zip(columns, line.split()[1:7])))
 
         # convert to DataFrame and save to disk
@@ -146,11 +168,15 @@ class QPBayes:
 
         See https://github.com/mailund/admixture_graph
         """
-        self.log("INFO: There are {:,} graphs to compute Bayes factors for.".format(len(self.graphs)))
+        self.log(
+            "INFO: There are {:,} graphs to compute Bayes factors for.".format(
+                len(self.graphs)
+            )
+        )
 
-        if self.nthreads > 1:
+        if self.threads > 1:
             # compute the model likelihoods
-            pool = mp.ProcessingPool(self.nthreads)
+            pool = mp.ProcessingPool(self.threads)
             pool.map(self.model_likelihood, self.graphs)
         else:
             # compute likelihoods without multi-threading
@@ -161,19 +187,25 @@ class QPBayes:
         """
         Run the MCMC to calculate the model likelihoods
         """
-        log_file = 'bayes/{}-{}-likelihood.log'.format(self.prefix, graph)
+        log_file = "bayes/{}-{}-likelihood.log".format(self.prefix, graph)
 
         if not os.path.isfile("bayes/{}-{}-burn-gelman.pdf".format(self.prefix, graph)):
             # only run once
-            run_cmd(["Rscript",
-                     "rscript/model_likelihood.R",
-                     self.prefix,
-                     graph,
-                     self.dstat_csv,
-                     self.mcmc_chains,
-                     self.mcmc_heated,
-                     self.mcmc_iters,
-                     self.mcmc_burn], env={'OMP_NUM_THREADS': '1'}, stdout=open(log_file, 'w'))
+            run_cmd(
+                [
+                    "Rscript",
+                    "rscript/model_likelihood.R",
+                    self.prefix,
+                    graph,
+                    self.dstat_csv,
+                    self.mcmc_chains,
+                    self.mcmc_heated,
+                    self.mcmc_iters,
+                    self.mcmc_burn,
+                ],
+                env={"OMP_NUM_THREADS": "1"},
+                stdout=open(log_file, "w"),
+            )
 
         self.log("INFO: Bayes factor done for graph {}".format(graph))
 
@@ -181,26 +213,53 @@ class QPBayes:
         """
         Compare Bayes factors to find the best fitting model.
         """
-        log_file = 'bayes/{}-bayes.log'.format(self.prefix)
+        log_file = "bayes/{}-bayes.log".format(self.prefix)
 
-        run_cmd(["Rscript",
-                 "rscript/bayes_factors.R",
-                 self.prefix,
-                 MCMC_NUM_BURN], stdout=open(log_file, 'w'))
+        run_cmd(
+            ["Rscript", "rscript/bayes_factors.R", self.prefix, MCMC_NUM_BURN],
+            stdout=open(log_file, "w"),
+        )
 
 
-def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, chains, heated, iterations, burnin, verbose=True,
-                            nthreads=CPU_CORES_HIGH):
+def calculate_bayes_factors(
+    geno,
+    snp,
+    ind,
+    prefix,
+    nodes,
+    outgroup,
+    chains,
+    heated,
+    iterations,
+    burnin,
+    verbose=True,
+    threads=CPU_CORES_HIGH,
+):
     """
     Find the best fitting graph by calculating the Bayes factors for each model found by QPBrute.
     """
     start = time()
 
     # instantiate the class
-    qpb = QPBayes(geno, snp, ind, prefix, nodes, outgroup, chains, heated, iterations, burnin, verbose, nthreads)
+    qpb = QPBayes(
+        geno,
+        snp,
+        ind,
+        prefix,
+        nodes,
+        outgroup,
+        chains,
+        heated,
+        iterations,
+        burnin,
+        verbose,
+        threads,
+    )
 
     if burnin >= iterations:
-        raise RuntimeError("ERROR: MCMC burnin must be less than the number of iterations")
+        raise RuntimeError(
+            "ERROR: MCMC burn in must be less than the number of iterations"
+        )
 
     # calculate outgroup D-stats for all 3-way permutations of the populations
     qpb.calculate_dstats()
@@ -211,30 +270,92 @@ def calculate_bayes_factors(geno, snp, ind, prefix, nodes, outgroup, chains, hea
     # compare Bayes factors to find the best fitting model
     qpb.find_best_model()
 
-    qpb.log("INFO: Calculating Bayes factors took: {}".format(timedelta(seconds=time() - start)))
+    qpb.log(
+        "INFO: Calculating Bayes factors took: {}".format(
+            timedelta(seconds=time() - start)
+        )
+    )
 
 
 if __name__ == "__main__":
     # parse the command line arguments
-    parser = argparse.ArgumentParser(description='Compare all fitted models to each other using Bayes factors.')
-    parser.add_argument("--geno", help="Input genotype file (eigenstrat format)", metavar='example.geno', required=True)
-    parser.add_argument("--snp", help="Input snp file (eigenstrat format)", metavar='example.snp', required=True)
-    parser.add_argument("--ind", help="Input indiv file (eigenstrat format)", metavar='example.ind', required=True)
-    parser.add_argument("--prefix", help="Output prefix", metavar='example', required=True)
-    parser.add_argument("--pops", nargs='+', help='List of populations', metavar=('A', 'B'), required=True)
-    parser.add_argument("--out", help="Outgroup population", metavar='OUT', required=True)
-    parser.add_argument("--chains", help="Number of replicate MCMC chains to run (default: %s)" % MCMC_NUM_CHAINS,
-                        metavar='NUM', default=MCMC_NUM_CHAINS)
-    parser.add_argument("--heated", help="Number of heated  chains per replicate (default: %s)" % MCMC_NUM_TEMPS,
-                        metavar='NUM', default=MCMC_NUM_TEMPS)
-    parser.add_argument("--iterations", help="Number of MCMC iterations per chain (default: %.1e)" % MCMC_NUM_ITERS,
-                        metavar='NUM', default=MCMC_NUM_ITERS)
-    parser.add_argument("--burnin",     help="Number of MCMC iterations to burnin (default: %.1e)" % MCMC_NUM_BURN,
-                        metavar='NUM', default=MCMC_NUM_BURN)
-    parser.add_argument("--threads", help="Number of threads to use (default: %s)" % CPU_CORES_MAX, metavar='NUM',
-                        default=CPU_CORES_MAX)
+    parser = argparse.ArgumentParser(
+        description="Compare all fitted models to each other using Bayes factors."
+    )
+    parser.add_argument(
+        "--geno",
+        help="Input genotype file (eigenstrat format)",
+        metavar="example.geno",
+        required=True,
+    )
+    parser.add_argument(
+        "--snp",
+        help="Input snp file (eigenstrat format)",
+        metavar="example.snp",
+        required=True,
+    )
+    parser.add_argument(
+        "--ind",
+        help="Input indiv file (eigenstrat format)",
+        metavar="example.ind",
+        required=True,
+    )
+    parser.add_argument(
+        "--prefix", help="Output prefix", metavar="example", required=True
+    )
+    parser.add_argument(
+        "--pops",
+        nargs="+",
+        help="List of populations",
+        metavar=("A", "B"),
+        required=True,
+    )
+    parser.add_argument(
+        "--out", help="Outgroup population", metavar="OUT", required=True
+    )
+    parser.add_argument(
+        "--chains",
+        help="Number of replicate MCMC chains to run (default: %s)" % MCMC_NUM_CHAINS,
+        metavar="NUM",
+        default=MCMC_NUM_CHAINS,
+    )
+    parser.add_argument(
+        "--heated",
+        help="Number of heated  chains per replicate (default: %s)" % MCMC_NUM_TEMPS,
+        metavar="NUM",
+        default=MCMC_NUM_TEMPS,
+    )
+    parser.add_argument(
+        "--iterations",
+        help="Number of MCMC iterations per chain (default: %.1e)" % MCMC_NUM_ITERS,
+        metavar="NUM",
+        default=MCMC_NUM_ITERS,
+    )
+    parser.add_argument(
+        "--burnin",
+        help="Number of MCMC iterations to burnin (default: %.1e)" % MCMC_NUM_BURN,
+        metavar="NUM",
+        default=MCMC_NUM_BURN,
+    )
+    parser.add_argument(
+        "--threads",
+        help="Number of threads to use (default: %s)" % CPU_CORES_MAX,
+        metavar="NUM",
+        default=CPU_CORES_MAX,
+    )
 
     argv = parser.parse_args()
 
-    calculate_bayes_factors(argv.geno, argv.snp, argv.ind, argv.prefix, argv.pops, argv.out, argv.chains, argv.heated,
-                            argv.iterations, argv.burnin, nthreads=argv.threads)
+    calculate_bayes_factors(
+        argv.geno,
+        argv.snp,
+        argv.ind,
+        argv.prefix,
+        argv.pops,
+        argv.out,
+        argv.chains,
+        argv.heated,
+        argv.iterations,
+        argv.burnin,
+        threads=argv.threads,
+    )
