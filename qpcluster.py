@@ -1,36 +1,36 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Group similar graphs using a hierarchical clustering algorithm
+"""
+__author__ = "Evan K. Irving-Pease"
+__copyright__ = "Copyright 2018"
+__email__ = "evan.irvingpease@gmail.com"
+__license__ = "MIT"
 
-import sys
-import csv
-import os
 import argparse
+import csv
 import glob
+import os
 import re
-import numpy as np
-
-from time import time
+import sys
 from datetime import timedelta
-from itertools import izip
-from cStringIO import StringIO
-
-# use the Pathos library for improved multi-processing
-import pathos.multiprocessing as mp
+from io import StringIO
+from time import time
 
 import matplotlib.pyplot as plt
-
-from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
-
+import numpy as np
+import pathos.multiprocessing as mp
 from graph_tool import *
 from graph_tool.topology import *
+from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 
-# import all the constants
-from consts import *
+from consts import CPU_CORES_MAX
 
 
 class QPCluster:
     def __init__(
-        self, graph_names, log_file, dot_path, csv_file, mtx_file, verbose, nthreads
+        self, graph_names, log_file, dot_path, csv_file, mtx_file, verbose, threads
     ):
         """
         Initialise the object attributes
@@ -41,7 +41,7 @@ class QPCluster:
         self.csv_file = csv_file
         self.mtx_file = mtx_file
         self.verbose = verbose
-        self.nthreads = nthreads
+        self.threads = threads
 
         self.graphs = []
 
@@ -53,12 +53,12 @@ class QPCluster:
         Handle message logging to file/stdout.
         """
         # send message to the log file
-        print >> self.log_handle, message
+        print(message, file=self.log_handle)
         self.log_handle.flush()
 
         if self.verbose:
             # echo to stdout
-            print message
+            print(message)
             sys.stdout.flush()
 
     @staticmethod
@@ -117,9 +117,9 @@ class QPCluster:
             "INFO: Calculating distance matrix for {:,} graph pairs".format(len(idxs))
         )
 
-        if self.nthreads > 1:
+        if self.threads > 1:
             # we need to buffer the results to use multi-threading
-            pool = mp.ProcessingPool(self.nthreads)
+            pool = mp.ProcessingPool(self.threads)
             results = pool.map(self.calculate_distance, idxs)
         else:
             # compute distances without multi-threading
@@ -139,7 +139,7 @@ class QPCluster:
 
     def get_matrix(self):
         """
-        Load the distance matix from file, or build it if necessary.
+        Load the distance matrix from file, or build it if necessary.
         """
         try:
             # load the distance matrix from file
@@ -154,7 +154,7 @@ class QPCluster:
         return dist_matrix
 
 
-def cluster_qpgraph(graph_names, prefix, verbose=True, nthreads=CPU_CORES_MAX):
+def cluster_qpgraph(graph_names, prefix, verbose=True, threads=CPU_CORES_MAX):
     """
     Compare all fitting graphs and compute the number of clusters.
     """
@@ -170,7 +170,7 @@ def cluster_qpgraph(graph_names, prefix, verbose=True, nthreads=CPU_CORES_MAX):
 
     # instantiate the class
     cq = QPCluster(
-        graph_names, log_file, dot_path, csv_file, mtx_file, verbose, nthreads
+        graph_names, log_file, dot_path, csv_file, mtx_file, verbose, threads
     )
 
     cq.log("INFO: There are {:,} graphs to compare".format(len(set(graph_names))))
@@ -209,7 +209,7 @@ def cluster_qpgraph(graph_names, prefix, verbose=True, nthreads=CPU_CORES_MAX):
     with open(csv_file, "wb") as fout:
         csv_writer = csv.writer(fout)
         csv_writer.writerow(["Graph", "Cluster"])
-        for graph, cluster in izip(graph_names, clusters):
+        for graph, cluster in zip(graph_names, clusters):
             csv_writer.writerow([graph, cluster])
 
     cq.log("INFO: Saved clusters to file %s" % csv_file)
@@ -227,13 +227,13 @@ def pprint_dendrogram(*args, **kwargs):
     annotate_above = kwargs.pop("annotate_above", 0)
     pdf = kwargs.pop("pdf", "clustering.pdf")
 
-    ddata = dendrogram(*args, **kwargs)
+    dendro = dendrogram(*args, **kwargs)
 
     if not kwargs.get("no_plot", False):
         plt.title("Hierarchical Clustering Dendrogram (truncated)")
         # plt.xlabel('sample index or (cluster size)')
         plt.ylabel("distance")
-        for i, d, c in zip(ddata["icoord"], ddata["dcoord"], ddata["color_list"]):
+        for i, d, c in zip(dendro["icoord"], dendro["dcoord"], dendro["color_list"]):
             x = 0.5 * sum(i[1:3])
             y = d[1]
             if y > annotate_above:
@@ -251,11 +251,10 @@ def pprint_dendrogram(*args, **kwargs):
 
     plt.savefig(pdf, format="pdf")
 
-    return ddata
+    return dendro
 
 
 if __name__ == "__main__":
-
     start = time()
 
     # parse the command line arguments
@@ -277,4 +276,4 @@ if __name__ == "__main__":
 
     cluster_qpgraph(graphs, argv.prefix)
 
-    print "INFO: Cluster execution took: %s" % timedelta(seconds=time() - start)
+    print("INFO: Cluster execution took: %s" % timedelta(seconds=time() - start))

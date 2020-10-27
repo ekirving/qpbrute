@@ -1,33 +1,32 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Build all possible graphs using a stepwise addition order algorithm, bounded by |Z| < 3
+"""
+__author__ = "Evan K. Irving-Pease"
+__copyright__ = "Copyright 2018"
+__email__ = "evan.irvingpease@gmail.com"
+__license__ = "MIT"
 
-# Build all possible graphs using a stepwise addition order algorithm, bounded by |Z| < 3
-
-import re
-import sys
+import argparse
 import copy
-import itertools
 import hashlib
+import itertools
 import os
 import random
-import argparse
-
-from time import time
-from datetime import timedelta
+import re
+import sys
+import xml.etree.ElementTree as ElemTree
 from collections import OrderedDict, defaultdict
-from cStringIO import StringIO
+from datetime import timedelta
+from io import StringIO
+from time import time
+
+import pathos.multiprocessing as mp
 from Bio import Phylo
 
-import xml.etree.ElementTree as ElemTree
-
-# use the Pathos library for improved multi-processing
-import pathos.multiprocessing as mp
-
-# import the custom modules
+from consts import ROOT_NODE, CPU_CORES_MAX
 from utils import run_cmd, pprint_qpgraph
-
-# import all the constants
-from consts import *
 
 
 class QPBrute:
@@ -84,12 +83,12 @@ class QPBrute:
         Handle message logging to file/stdout. 
         """
         # send message to the log file
-        print >> self.log_handle, message
+        print(message, file=self.log_handle)
         self.log_handle.flush()
 
         if self.verbose:
             # echo to stdout
-            print message
+            print(message)
             sys.stdout.flush()
 
     def recurse_tree(self, root_tree, new_tag, remaining, depth=0):
@@ -107,7 +106,6 @@ class QPBrute:
 
         # add the new node to every branch in the tree
         for target_node in target_nodes:
-
             # clone the current tree and add the new node
             new_tree = copy.deepcopy(root_tree)
             self.insert_node(new_tree, target_node, new_tag)
@@ -201,7 +199,7 @@ class QPBrute:
             # we need to buffer the results to use multi-threading
             pool = mp.ProcessingPool(self.threads)
             results = pool.map(
-                self.run_qpgraph, itertools.izip(new_trees, itertools.repeat(depth))
+                self.run_qpgraph, zip(new_trees, itertools.repeat(depth))
             )
         else:
             # test the trees without multi-threading
@@ -288,7 +286,7 @@ class QPBrute:
 
         if attrs:
             # add any node attributes
-            for key, value in attrs.iteritems():
+            for key, value in attrs.items():
                 new_node.set(key, value)
 
         return new_node
@@ -351,7 +349,6 @@ class QPBrute:
         if num_outliers <= self.max_outlier and num_nodes > (
             len(self.nodes) - self.print_offset
         ):
-
             # embed some useful metadata info in the PDF name
             pdf_file = self.pdf_path + "-n{nodes}-o{out}-a{admix}-{name}.pdf".format(
                 nodes=num_nodes, out=num_outliers, admix=num_admix, name=graph_name
@@ -659,7 +656,7 @@ class QPBrute:
             newick = newick.replace(old, "n%s" % (i + 1))
 
         # replace n0 with a0 (to preserve the existing cache)
-        newick = re.sub(r"n([0-9]+)", r"a\1", newick)
+        newick = re.sub(r"n([0-9]+)", r"a\1", str(newick))
 
         return newick
 
@@ -828,7 +825,6 @@ def permute_qpgraph(
 
 
 if __name__ == "__main__":
-
     start = time()
 
     # parse the command line arguments
@@ -897,4 +893,4 @@ if __name__ == "__main__":
         print_offset=argv.print_offset,
     )
 
-    print "INFO: Permute execution took: %s" % timedelta(seconds=time() - start)
+    print("INFO: Permute execution took: %s" % timedelta(seconds=time() - start))

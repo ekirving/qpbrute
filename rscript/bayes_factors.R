@@ -1,13 +1,22 @@
 #!/usr/bin/env Rscript
-library(admixturegraph, quietly=T)
-library(gtools, quietly=T)
-library(stringr, quietly=T)
-library(ggplot2, quietly=T)
-library(reshape2, quietly=T)
-library(viridis, quietly=T)
-library(scales, quietly=T)
-library(raster, quietly=T)
-library(data.table, quietly=T)
+
+# Author:    Evan K. Irving-Pease
+# Copyright: Copyright 2018
+# Email:     evan.irvingpease@gmail.com
+# License:   MIT
+
+quiet <- function(x) {
+  suppressMessages(suppressWarnings(x))
+}
+quiet(library(admixturegraph))
+quiet(library(gtools))
+quiet(library(stringr))
+quiet(library(ggplot2))
+quiet(library(reshape2))
+quiet(library(viridis))
+quiet(library(scales))
+quiet(library(raster))
+quiet(library(data.table))
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)

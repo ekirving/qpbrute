@@ -1,12 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Shared utilities for qpBrute
+"""
+__author__ = "Evan K. Irving-Pease"
+__copyright__ = "Copyright 2018"
+__email__ = "evan.irvingpease@gmail.com"
+__license__ = "MIT"
 
 import csv
 import os
+import re
 import subprocess
 
-# import all the constants
-from consts import *
+import graphviz
+
+from consts import COLOURS
 
 
 def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False):
@@ -26,7 +35,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
 
     # print the command
     if verbose:
-        print(u" ".join(cmd))
+        print(" ".join(cmd))
 
     # handle custom environment variables
     local_env = os.environ
@@ -56,16 +65,14 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
     return out
 
 
-def trim_ext(fullpath, n=1):
-    return ".".join(fullpath.split(".")[:-n])
+def trim_ext(full_path, n=1):
+    return ".".join(full_path.split(".")[:-n])
 
 
 def pprint_qpgraph(dot_file, pdf_file):
     """
     Pretty print a qpGraph dot file using the graphviz library.
     """
-    import graphviz
-    import re
 
     # extract the body contents from the dot file
     with open(dot_file, "rU") as fin:
@@ -100,6 +107,7 @@ def pprint_qpgraph(dot_file, pdf_file):
     nodes.sort()
 
     try:
+        # TODO make node colours a CLI param
         # load the optional colour file
         colours = dict(csv.reader(open("nodes.list", "r"), delimiter="\t"))
     except IOError:

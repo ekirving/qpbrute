@@ -21,15 +21,3 @@ stub*
 *tmp
 ~*
 *.bak
-
-# ms output
-seedms
-
-# ignore test data
-*pygmy*
-*socotra*
-*africa*
-*nature*
-
-# node colours
-nodes.list

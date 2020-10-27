@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Static constants for qpBrute
+"""
+__author__ = "Evan K. Irving-Pease"
+__copyright__ = "Copyright 2018"
+__email__ = "evan.irvingpease@gmail.com"
+__license__ = "MIT"
 
 import multiprocessing
 

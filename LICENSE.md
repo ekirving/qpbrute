@@ -1,6 +1,6 @@
 The MIT License
 
-Copyright (c) 2018 Evan K. Irving-Pease https://irving-pease.com
+Copyright (c) 2018 Evan K. Irving-Pease
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

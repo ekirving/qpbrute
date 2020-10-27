@@ -1,29 +1,35 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Compare all fitted models to each other using Bayes factors from admixture_graph
+"""
+__author__ = "Evan K. Irving-Pease"
+__copyright__ = "Copyright 2018"
+__email__ = "evan.irvingpease@gmail.com"
+__license__ = "MIT"
 
-# Compare all fitted models to each other using Bayes factors from admixture_graph
-
-import sys
-import os
 import argparse
 import glob
-import re
 import itertools
+import os
+import re
+import sys
+from collections import defaultdict
+from datetime import timedelta
+from time import time
 
 import pandas as pd
-
-from time import time
-from datetime import timedelta
-from collections import defaultdict
-
-# use the Pathos library for improved multi-processing
 import pathos.multiprocessing as mp
 
-# import the custom modules
+from consts import (
+    MCMC_NUM_BURN,
+    CPU_CORES_HIGH,
+    MCMC_NUM_CHAINS,
+    MCMC_NUM_TEMPS,
+    MCMC_NUM_ITERS,
+    CPU_CORES_MAX,
+)
 from utils import run_cmd
-
-# import all the constants
-from consts import *
 
 
 class QPBayes:
@@ -87,12 +93,12 @@ class QPBayes:
         Handle message logging to file/stdout.
         """
         # send message to the log file
-        print >> self.log_handle, message
+        print(message, file=self.log_handle)
         self.log_handle.flush()
 
         if self.verbose:
             # echo to stdout
-            print message
+            print(message)
             sys.stdout.flush()
 
     def calculate_dstats(self):
