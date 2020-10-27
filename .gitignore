@@ -1,6 +1,9 @@
 # compiled python byte code
 *.pyc
 
+# pip build files
+*.egg-info/
+
 # R environment files
 .RData
 .Rhistory

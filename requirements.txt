@@ -1,4 +1,4 @@
-graphviz~=2.42.3
+graphviz~=0.14.2
 matplotlib~=3.3.2
 numpy~=1.19.2
 pandas~=1.1.3
