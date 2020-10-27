@@ -29,14 +29,14 @@ num_burn <- strtoi(args[2])
 # num_burn <- 1e5
 
 # load any custom burn in values
-burn_over <- paste0(prefix, '-burnin.csv')
+burn_over <- paste0(prefix, "/", prefix, '-burnin.csv')
 if (file.exists(burn_over)) {
     burn <- read.csv(burn_over, row.names = 1, col.names = c('', 'burn'), header = F)
 }
 
 # load all the thinned chains
 mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d).csv")
-mcmc.files <- list.files(path='bayes', pattern=mcmc.regex, full.names=TRUE)
+mcmc.files <- list.files(path=paste0(prefix, "/bayes"), pattern=mcmc.regex, full.names=TRUE)
 names(mcmc.files) <- str_match(mcmc.files, mcmc.regex)[,2]
 graphs <- unique(names(mcmc.files))
 
@@ -67,7 +67,7 @@ ll <- ll[order(-ll$mean),]
 chains <- chains[row.names(ll)]
 
 # save the model likelihoods
-write.csv(ll, file=paste0('bayes/', prefix, "-likelihoods.csv"))
+write.csv(ll, file=paste0(prefix, "/bayes/", prefix, "-likelihoods.csv"))
 
 num_chains <- length(chains)
 
@@ -100,7 +100,7 @@ if (num_chains >= 2) {
     melted_mtx$Var2 <- factor(melted_mtx$Var2, levels=names(chains))
 
     # plot the heatmap
-    pdf(file=paste0('bayes/', prefix, "-heatmap.pdf"), width=9, height=7)
+    pdf(file=paste0(prefix, "/bayes/", prefix, "-heatmap.pdf"), width=9, height=7)
     ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
         geom_tile() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1),

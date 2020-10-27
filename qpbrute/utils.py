@@ -62,7 +62,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
 
         raise RuntimeError(err)
 
-    return out
+    return out.decode("utf-8") if out else ""
 
 
 def trim_ext(full_path, n=1):

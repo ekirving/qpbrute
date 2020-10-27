@@ -81,15 +81,15 @@ convert_qpgraph <- function(graph_file) {
 }
 
 # perform the conversion
-graph <- convert_qpgraph(paste0("graphs/", prefix, "-", graph_code, ".graph"))
+graph <- convert_qpgraph(paste0(prefix, "/graphs/", prefix, "-", graph_code, ".graph"))
 
 # plot the graph
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-graph.pdf'))
+pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-graph.pdf'))
 plot(graph, show_admixture_labels = TRUE)
 off <- dev.off()
 
 # plot the D-stats
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-dstat.pdf'))
+pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-dstat.pdf'))
 plot(f4stats(dstats.pos))
 off <- dev.off()
 
@@ -101,7 +101,7 @@ cat(summary(graph_fit))
 cat("\n")
 
 # plot the fit
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-fit.pdf'))
+pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-fit.pdf'))
 plot(graph_fit)
 off <- dev.off()
 
@@ -127,7 +127,7 @@ run_chain <- function(i, num_iters) {
     chain.prev <- NULL
     chain.new <- NULL
 
-    fullchain.file <- paste0('bayes/', prefix, '-', graph_code, '-chain-', i, '.csv')
+    fullchain.file <- paste0(prefix, "/bayes/", prefix, '-', graph_code, '-chain-', i, '.csv')
 
     # check if the chain exists
     if (file.exists(fullchain.file) && file.info(fullchain.file)$size > 0) {
@@ -202,7 +202,7 @@ for (i in 1:num_chains) {
 
     if (min(ess) < 100) {
         cat(paste0("WARNING: ESS below threshold. min(ess) = ", min(ess),
-                       ' ./bayes/', prefix, '-', graph_code, '-chain-', i, '.csv'))
+                       " ./", prefix, "/bayes/", prefix, '-', graph_code, '-chain-', i, '.csv'))
     }
 
     # NB. we do not thin the chain because there is no need
@@ -217,18 +217,18 @@ for (i in 1:num_chains) {
 
     # plot ESS vs. burn-in
     cat("Plotting ESS vs. burn-in.", "\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
+    pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
     plotESSBurn(mcmc.chain, step.size=round(num_burn/2, 0))
     off <- dev.off()
 
     cat("Plotting thinned autocorrelation.\n\n")
-    pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-thin-autocorr-', i, '.pdf'))
+    pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-thin-autocorr-', i, '.pdf'))
     autocorr.plot(thinning(mcmc.burn, k=1000), lag.max=50)
     off <- dev.off()
 
     cat("Plotting the trace.\n\n")
-    # pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
-    png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-', i, '-pt%d.png'), width=7, height=7, units='in', res=300)
+    # pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
+    png(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-', i, '-pt%d.png'), width=7, height=7, units='in', res=300)
     plot(mcmc.burn)
     off <- dev.off()
 
@@ -250,13 +250,13 @@ cat("\n")
 
 # plot the combined traces
 cat("Plotting combined traces.", "\n\n")
-# pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0.pdf'))
-png(file=paste0('bayes/', prefix, "-", graph_code, '-burn-trace-0-pt%d.png'), width=7, height=7, units='in', res=300)
+# pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-0.pdf'))
+png(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-0-pt%d.png'), width=7, height=7, units='in', res=300)
 plot(chains.all)
 off <- dev.off()
 
 cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
-pdf(file=paste0('bayes/', prefix, "-", graph_code, '-burn-gelman.pdf'))
+pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-gelman.pdf'))
 gelman.plot(chains.all)
 off <- dev.off()
 
@@ -268,5 +268,5 @@ print(gelman)
 
 if (gelman$psrf['likelihood', 1] > 1.1) {
     cat(paste0("WARNING: PSRF of likelihood above threshold = ", round(gelman$psrf['likelihood', 1], 3),
-                   ' ./bayes/', prefix, '-', graph_code))
+                   " ./", prefix, "/bayes/", prefix, '-', graph_code))
 }

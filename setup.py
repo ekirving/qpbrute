@@ -22,7 +22,7 @@ setuptools.setup(
         "console_scripts": [
             "qpBrute = qpbrute.qpbrute:qpbrute",
             "qpBayes = qpbrute.qpbayes:qpbayes",
-            "qpCluster = qpbrute.qpcluster:qpcluster",
+            # "qpCluster = qpbrute.qpcluster:qpcluster",
         ]
     },
     classifiers=["Programming Language :: Python :: 3", "License :: MIT License"],

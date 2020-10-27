@@ -64,11 +64,13 @@ class QPBayes:
         self.mcmc_burn = int(float(burnin))
         self.verbose = verbose
         self.threads = int(threads)
+        self.code_dir = os.path.abspath(os.path.dirname(__file__))
 
         # sanity check the outgroup is not in the node list
         if outgroup in nodes:
             self.nodes.remove(outgroup)
 
+        # TODO save the successful graphs in a json file
         # find all the PDFs, and extract their graph names
         self.graphs = [
             re.search(r"a[0-9]-(.+).pdf", pdf).group(1)
@@ -207,7 +209,7 @@ class QPBayes:
             run_cmd(
                 [
                     "Rscript",
-                    "rscript/model_likelihood.R",
+                    f"{self.code_dir}/rscript/model_likelihood.R",
                     self.prefix,
                     graph,
                     self.dstat_csv,
@@ -229,7 +231,12 @@ class QPBayes:
         log_file = f"{self.prefix}/bayes/{self.prefix}-bayes.log"
 
         run_cmd(
-            ["Rscript", "rscript/bayes_factors.R", self.prefix, MCMC_NUM_BURN],
+            [
+                "Rscript",
+                f"{self.code_dir}/rscript/bayes_factors.R",
+                self.prefix,
+                MCMC_NUM_BURN,
+            ],
             stdout=open(log_file, "w"),
         )
 

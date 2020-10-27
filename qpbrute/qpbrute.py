@@ -347,7 +347,9 @@ class QPBrute:
         # count the leaf nodes
         all_nodes = new_tree.findall(".//*")
         num_nodes = len([node for node in all_nodes if node.get("internal") != "1"])
-        num_admix = len([node for node in all_nodes if node.get("admix") == "1"]) / 2
+        num_admix = int(
+            len([node for node in all_nodes if node.get("admix") == "1"]) / 2
+        )
         num_outliers = len(outliers)
 
         # only print PDFs for graphs that pass the threshold
@@ -611,7 +613,7 @@ class QPBrute:
         """
         Generate a unique key by hashing a string
         """
-        return hashlib.sha1(text).hexdigest()[0:length]
+        return hashlib.sha1(text.encode("utf-8")).hexdigest()[0:length]
 
     @staticmethod
     def new_label(root_tree, admix=False):
@@ -621,7 +623,7 @@ class QPBrute:
         all_nodes = root_tree.findall(".//*")
 
         if admix:
-            num = len([node for node in all_nodes if node.get("admix") == "1"]) / 2
+            num = int(len([node for node in all_nodes if node.get("admix") == "1"]) / 2)
         else:
             num = len(
                 [
