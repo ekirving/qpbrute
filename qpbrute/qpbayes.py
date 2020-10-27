@@ -28,6 +28,7 @@ from qpbrute.consts import (
     MCMC_NUM_TEMPS,
     MCMC_NUM_ITERS,
     CPU_CORES_MAX,
+    FOLDERS,
 )
 from qpbrute.utils import run_cmd
 
@@ -71,15 +72,19 @@ class QPBayes:
         # find all the PDFs, and extract their graph names
         self.graphs = [
             re.search(r"a[0-9]-(.+).pdf", pdf).group(1)
-            for pdf in glob.glob("pdf/{}*".format(prefix))
+            for pdf in glob.glob(f"{prefix}/pdf/{prefix}*")
         ]
 
-        # self.dot_path = 'graphs/{}'.format(prefix)
-        self.dstat_par = "dstats/{}.par".format(prefix)
-        self.dstat_csv = "dstats/{}.csv".format(prefix)
-        self.dstat_log = "dstats/{}.log".format(prefix)
-        self.dstat_tests = "dstats/{}.tests".format(prefix)
-        self.bayes_log = "{}.bayes.log".format(prefix)
+        # make sure all the output folders exits
+        for folder in FOLDERS:
+            os.makedirs(f"{prefix}/{folder}", exist_ok=True)
+
+        # self.dot_path = f"{prefix}/graphs/{prefix}"
+        self.dstat_par = f"{prefix}/dstats/{prefix}.par"
+        self.dstat_csv = f"{prefix}/dstats/{prefix}.csv"
+        self.dstat_log = f"{prefix}/dstats/{prefix}.log"
+        self.dstat_tests = f"{prefix}/dstats/{prefix}.tests"
+        self.bayes_log = f"{prefix}/{prefix}.bayes.log"
 
         # clean up the log file
         if os.path.exists(self.bayes_log):
@@ -193,9 +198,11 @@ class QPBayes:
         """
         Run the MCMC to calculate the model likelihoods
         """
-        log_file = "bayes/{}-{}-likelihood.log".format(self.prefix, graph)
+        log_file = f"{self.prefix}/bayes/{self.prefix}-{graph}-likelihood.log"
 
-        if not os.path.isfile("bayes/{}-{}-burn-gelman.pdf".format(self.prefix, graph)):
+        if not os.path.isfile(
+            f"{self.prefix}/bayes/{self.prefix}-{graph}-burn-gelman.pdf"
+        ):
             # only run once
             run_cmd(
                 [
@@ -219,7 +226,7 @@ class QPBayes:
         """
         Compare Bayes factors to find the best fitting model.
         """
-        log_file = "bayes/{}-bayes.log".format(self.prefix)
+        log_file = f"{self.prefix}/bayes/{self.prefix}-bayes.log"
 
         run_cmd(
             ["Rscript", "rscript/bayes_factors.R", self.prefix, MCMC_NUM_BURN],

@@ -25,13 +25,14 @@ from time import time
 import pathos.multiprocessing as mp
 from Bio import Phylo
 
-from qpbrute.consts import ROOT_NODE, CPU_CORES_MAX
+from qpbrute.consts import ROOT_NODE, CPU_CORES_MAX, FOLDERS
 from qpbrute.utils import run_cmd, pprint_qpgraph
 
 
 class QPBrute:
     def __init__(
         self,
+        prefix,
         par_file,
         log_file,
         dot_path,
@@ -63,6 +64,10 @@ class QPBrute:
 
         # should we try all possible graphs, or should we stop when we find something reasonable
         self.exhaustive_search = exhaustive
+
+        # make sure all the output folders exits
+        for folder in FOLDERS:
+            os.makedirs(f"{prefix}/{folder}", exist_ok=True)
 
         # open the file for writing
         self.log_handle = open(log_file, "a")
@@ -736,9 +741,9 @@ def permute_qpgraph(
     Find the best fitting graph for a given set of nodes, by permuting all possible graphs.
     """
 
-    log_file = prefix + ".log"
-    dot_path = "graphs/" + prefix
-    pdf_path = "pdf/" + prefix
+    log_file = f"{prefix}/{prefix}.log"
+    dot_path = f"{prefix}/graphs/{prefix}"
+    pdf_path = f"{prefix}/pdf/{prefix}"
 
     # clean up the log file
     if os.path.exists(log_file):
@@ -746,6 +751,7 @@ def permute_qpgraph(
 
     # instantiate the class
     pq = QPBrute(
+        prefix,
         par_file,
         log_file,
         dot_path,
@@ -859,13 +865,13 @@ def qpbrute():
         action="store_true",
     )
     parser.add_argument(
-        "--max_outlier",
+        "--max-outlier",
         help="How many outliers are permitted before pruning a graph",
         metavar="NUM",
         default=0,
     )
     parser.add_argument(
-        "--print_offset",
+        "--print-offset",
         help="Print PDFs for graphs with (N - offset) nodes",
         metavar="NUM",
         default=0,

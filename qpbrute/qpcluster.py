@@ -25,12 +25,20 @@ from graph_tool import *
 from graph_tool.topology import *
 from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 
-from qpbrute.consts import CPU_CORES_MAX
+from qpbrute.consts import CPU_CORES_MAX, FOLDERS
 
 
 class QPCluster:
     def __init__(
-        self, graph_names, log_file, dot_path, csv_file, mtx_file, verbose, threads
+        self,
+        prefix,
+        graph_names,
+        log_file,
+        dot_path,
+        csv_file,
+        mtx_file,
+        verbose,
+        threads,
     ):
         """
         Initialise the object attributes
@@ -44,6 +52,10 @@ class QPCluster:
         self.threads = threads
 
         self.graphs = []
+
+        # make sure all the output folders exits
+        for folder in FOLDERS:
+            os.makedirs(f"{prefix}/{folder}", exist_ok=True)
 
         # open the file for writing
         self.log_handle = open(log_file, "a")
@@ -158,11 +170,11 @@ def cluster_qpgraph(graph_names, prefix, verbose=True, threads=CPU_CORES_MAX):
     """
     Compare all fitting graphs and compute the number of clusters.
     """
-    log_file = "{}.permute.log".format(prefix)
-    dot_path = "graphs/{}".format(prefix)
-    csv_file = "clusters/{).csv".format(prefix)
-    mtx_file = "qpgraph/{}.npy".format(prefix)
-    pdf_file = "pdf/{}.cluster.pdf".format(prefix)
+    log_file = f"{prefix}/{prefix}.permute.log"
+    dot_path = f"{prefix}/graphs/{prefix}"
+    csv_file = f"{prefix}/clusters/{prefix}.csv"
+    mtx_file = f"{prefix}/qpgraph/{prefix}.npy"
+    pdf_file = f"{prefix}/pdf/{prefix}.cluster.pdf"
 
     # clean up the log file
     if os.path.exists(log_file):
@@ -170,7 +182,7 @@ def cluster_qpgraph(graph_names, prefix, verbose=True, threads=CPU_CORES_MAX):
 
     # instantiate the class
     cq = QPCluster(
-        graph_names, log_file, dot_path, csv_file, mtx_file, verbose, threads
+        prefix, graph_names, log_file, dot_path, csv_file, mtx_file, verbose, threads
     )
 
     cq.log("INFO: There are {:,} graphs to compare".format(len(set(graph_names))))
@@ -271,7 +283,7 @@ def qpcluster():
     argv = parser.parse_args()
 
     # find all the PDFs, and extract the graph names
-    files = glob.glob("pdf/{}*".format(argv.prefix))
+    files = glob.glob(f"{argv.prefix}/pdf/{argv.prefix}*")
     graphs = [re.search(r"a[0-9]-(.+).pdf", filename).group(1) for filename in files]
 
     cluster_qpgraph(graphs, argv.prefix)

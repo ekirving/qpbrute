@@ -41,3 +41,5 @@ MCMC_NUM_ITERS = int(2e6)
 MCMC_NUM_BURN = int(1.1e6)
 
 ROOT_NODE = "R"
+
+FOLDERS = ["bayes", "clusters", "dstats", "graphs", "pdf"]
