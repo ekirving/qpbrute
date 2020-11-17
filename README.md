@@ -36,19 +36,41 @@ If you reuse any of this code then please cite the papers:
 
 To use this software you will need to install various dependencies.
 
+### Option 1
+#### Conda
+
 The easiest way to install qpBrute and all the dependencies is via the [conda package manager](
-https://docs.conda.io/projects/conda/en/latest/index.html):
+https://docs.conda.io/projects/conda/en/latest/index.html).
+
+To install `miniconda3` for MacOSX:
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh
+```
+or for Linux:
+```bash
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh
+```
+
+If you already have conda installed, you may need to update it to the latest version before installing qpBrute:
+```bash
+conda update -n base -c defaults conda
+```
+#### qpBrute
+Then install qpBrute and all it's dependencies in one step:
 ```bash
 conda env create --name qpbrute --file https://raw.githubusercontent.com/ekirving/qpbrute/master/environment.yaml
 ```
+And lastly, activate the new environment:
 ```bash
 conda activate qpbrute
 ```
-
+---
+### Option 2
 Alternatively, you can install all the dependencies manually via pip and CRAN.
 
-### Python
-
+#### Python
 Python ≥ 3.6 and pip:
 
 ```bash
@@ -58,7 +80,7 @@ pip install https://github.com/ekirving/qpbrute.git
 The full list of Python modules installed in the project environment can be
 found in the `requirements.txt` file.
 
-### R
+#### R
 
 R ≥ 3.4 with the following modules:
 
@@ -82,8 +104,7 @@ install.packages(c("admixturegraph", "coda", "data.table", "ggplot2", "gtools", 
 install_github("sbfnk/fitR")
 ```
 
-
-### Other
+#### AdmixTools
 
 * [AdmixTools](https://github.com/DReichLab/AdmixTools)
 
