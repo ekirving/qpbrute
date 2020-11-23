@@ -8,14 +8,14 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="qpbrute",
-    version="0.1",
+    version="0.2",
     author="Evan K. Irving-Pease",
     author_email="evan.irvingpease@gmail.com",
     description="Heuristic algorithm for automatically fitting admixture graphs",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ekirving/qpbrute",
-    package_dir={"qpbrute": "qpbrute", "qpbrute.rscript": "qpbrute/rscript",},
+    package_dir={"qpbrute": "qpbrute", "qpbrute.rscript": "qpbrute/rscript"},
     packages=["qpbrute", "qpbrute.rscript"],
     include_package_data=True,
     entry_points={

@@ -17,10 +17,11 @@ the graph. At each step, insertion of a new node is tested at all branches of th
 Where a node can not be inserted without producing f4 outliers (i.e. |Z| >=3) then all possible admixture combinations 
 are also attempted. If a node cannot not be inserted via either approach, that sub-graph is discarded. If the node is 
 successfully inserted, the remaining nodes are recursively inserted into that graph. All possible starting node orders 
-are attempted to ensure full coverage of the graph space.
+are attempted to ensure maximal coverage of the graph space.
 
-The resulting list of fitted graphs are then passed to the MCMC algorithm implemented in the admixturegraph R package, 
-to compute the marginal likelihood of the models and their Bayes Factors (BF).
+The resulting list of fitted graphs are then passed to the MCMC algorithm implemented in the 
+[admixturegraph](https://github.com/mailund/admixture_graph) R package, to compute the marginal likelihood of the 
+models and their Bayes Factors (BF).
 
 ## Citation
 If you reuse any of this code then please cite the papers:
@@ -78,7 +79,7 @@ pip install https://github.com/ekirving/qpbrute.git
 ```
 
 The full list of Python modules installed in the project environment can be
-found in the `requirements.txt` file.
+found in the [requirements.txt](https://raw.githubusercontent.com/ekirving/qpbrute/master/requirements.txt) file.
 
 #### R
 
