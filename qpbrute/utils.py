@@ -60,7 +60,7 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
         if proc.returncode == 139:
             err = f"Segmentation fault (core dumped) {err}"
 
-        raise RuntimeError(err)
+        raise RuntimeError(f"ERROR: '{err}'; RETCODE:{proc.returncode}\n" + " ".join(cmd))
 
     return out.decode("utf-8") if out else ""
 
