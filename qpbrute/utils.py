@@ -118,5 +118,8 @@ def pprint_qpgraph(dot_file, pdf_file):
         colour = colours.get(node, COLOURS[idx])
         dot.node(node, shape="ellipse", color=colour, fontcolor=colour)
 
-    # render the graph (basename.pdf)
-    dot.render(cleanup=True)
+    try:
+        # render the graph (basename.pdf)
+        dot.render(cleanup=True)
+    except FileNotFoundError:
+        pass

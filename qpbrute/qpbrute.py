@@ -361,8 +361,9 @@ class QPBrute:
                 nodes=num_nodes, out=num_outliers, admix=num_admix, name=graph_name
             )
 
-            # pretty print the qpGraph dot file
-            pprint_qpgraph(dot_file, pdf_file)
+            if not os.path.isfile(pdf_file):
+                # pretty print the qpGraph dot file
+                pprint_qpgraph(dot_file, pdf_file)
 
         # output some summary stats
         self.log(
