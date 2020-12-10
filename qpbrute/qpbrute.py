@@ -903,7 +903,3 @@ def qpbrute():
     )
 
     print("INFO: Permute execution took: %s" % timedelta(seconds=time() - start))
-
-
-if __name__ == "__main__":
-    qpbrute()

@@ -289,7 +289,3 @@ def qpcluster():
     cluster_qpgraph(graphs, argv.prefix)
 
     print("INFO: Cluster execution took: %s" % timedelta(seconds=time() - start))
-
-
-if __name__ == "__main__":
-    qpcluster()

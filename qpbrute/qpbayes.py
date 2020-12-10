@@ -379,7 +379,3 @@ def qpbayes():
         argv.burnin,
         threads=argv.threads,
     )
-
-
-if __name__ == "__main__":
-    qpbayes()
