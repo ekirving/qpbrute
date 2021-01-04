@@ -15,9 +15,9 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ekirving/qpbrute",
-    package_dir={"qpbrute": "qpbrute", "qpbrute.rscript": "qpbrute/rscript"},
-    packages=["qpbrute", "qpbrute.rscript"],
     include_package_data=True,
+    package_dir={"qpbrute": "qpbrute"},
+    packages=["qpbrute"],
     entry_points={
         "console_scripts": [
             "qpBrute = qpbrute.qpbrute:qpbrute",
