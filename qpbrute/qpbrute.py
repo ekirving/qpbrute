@@ -25,7 +25,7 @@ from time import time
 import pathos.multiprocessing as mp
 from Bio import Phylo
 
-from qpbrute.consts import ROOT_NODE, CPU_CORES_MAX, FOLDERS
+from qpbrute.consts import ROOT_NODE, CPU_CORES_MAX, FOLDERS, MAX_POPULATIONS
 from qpbrute.utils import run_cmd, pprint_qpgraph
 
 
@@ -771,34 +771,40 @@ def permute_qpgraph(
         print_offset,
     )
 
-    if len(nodes) > 7:
-        raise RuntimeError(
-            "ERROR: Maximum number of populations is 7 (n={})".format(len(nodes))
-        )
-
     if ROOT_NODE in nodes:
         raise RuntimeError(
             "ERROR: '{}' is a reserved name for the root of the graph".format(ROOT_NODE)
         )
 
-    # get all the permutations of possible node orders
-    all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
+    if not exhaustive:
+        # we don't need to permute the node list if we're doing a heuristic search
+        all_nodes_perms = []
 
-    # randomise the list of starting orders
-    random.shuffle(all_nodes_perms)
+    else:
+        if len(nodes) > MAX_POPULATIONS:
+            raise RuntimeError(
+                "ERROR: Maximum number of populations is {} (n={})".format(MAX_POPULATIONS, len(nodes))
+            )
 
-    pq.log(
-        "INFO: There are {:,} possible starting orders for the given nodes.".format(
-            len(all_nodes_perms)
+        # get all the permutations of possible node orders
+        all_nodes_perms = list(itertools.permutations(nodes, len(nodes)))
+
+        # randomise the list of starting orders
+        random.shuffle(all_nodes_perms)
+
+        pq.log(
+            "INFO: There are {:,} possible starting orders for the given nodes.".format(
+                len(all_nodes_perms)
+            )
         )
-    )
-    pq.log(
-        "INFO: Performing %s search."
-        % ("an exhaustive" if pq.exhaustive_search else "a heuristic")
-    )
 
-    # remove the starting set (so we don't do it twice)
-    all_nodes_perms.remove(tuple(nodes))
+        # remove the starting set (so we don't do it twice)
+        all_nodes_perms.remove(tuple(nodes))
+
+        pq.log(
+            "INFO: Performing %s search."
+            % ("an exhaustive" if pq.exhaustive_search else "a heuristic")
+        )
 
     # keep looping until we find a solution, or until we've exhausted all possible starting orders
     while not pq.solutions or pq.exhaustive_search:
@@ -867,6 +873,13 @@ def qpbrute():
         help="Do not insert new nodes with admixture branches",
         action="store_true",
     )
+
+    parser.add_argument(
+        "--heuristic",
+        help="Perform a heuristic search (with no population limit) instead of an exhaustive search",
+        action="store_true",
+    )
+
     parser.add_argument(
         "--max-outlier",
         help="How many outliers are permitted before pruning a graph",
@@ -894,6 +907,7 @@ def qpbrute():
         argv.prefix,
         argv.pops,
         argv.out,
+        exhaustive=not argv.heuristic,
         threads=argv.threads,
         skeleton=argv.skeleton,
         qpgraph=argv.qpgraph,

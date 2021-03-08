@@ -10,6 +10,9 @@ __license__ = "MIT"
 
 import multiprocessing
 
+# the maximum number of populations that are computationally tractatable
+MAX_POPULATIONS = 7
+
 # how many CPU cores does this machine have
 TOTAL_CORES = multiprocessing.cpu_count()
 
