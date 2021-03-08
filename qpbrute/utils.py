@@ -60,6 +60,10 @@ def run_cmd(cmd, shell=False, stdout=None, stderr=None, env=None, verbose=False)
         if proc.returncode == 139:
             err = f"Segmentation fault (core dumped) {err}"
 
+        elif proc.returncode == -9:
+            err = f"Process killed by the operating system (probably due to a memory issue) {err} " \
+                  f"Use the `--threads` argument to prevent qpBrute exceeding total available memory"
+
         raise RuntimeError(f"ERROR: '{err}'; RETCODE:{proc.returncode}\n" + " ".join(cmd))
 
     return out.decode("utf-8") if out else ""
