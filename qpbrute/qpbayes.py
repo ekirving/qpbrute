@@ -143,8 +143,8 @@ class QPBayes:
             "popfilename:  {}".format(
                 self.dstat_tests
             ),  # Program will run the method for all listed 4-way tests
-            "blgsize:      0.005"  # TODO parameterize
-            "f4mode:       YES",  # TODO f4 statistics not D-stats are computed
+            "blgsize:      0.005",  # TODO parameterize
+            "f4mode:       YES",    # TODO f4 statistics not D-stats are computed
         ]
 
         # the params to be defined in a .par file
