@@ -5,13 +5,12 @@
 # Email:     evan.irvingpease@gmail.com
 # License:   MIT
 
-quiet <- function(x) {
-  suppressMessages(suppressWarnings(x))
-}
+quiet <- function(x) { suppressMessages(suppressWarnings(x)) }
 quiet(library(admixturegraph))
 quiet(library(coda))
 quiet(library(fitR))
 quiet(library(data.table))
+quiet(library(rjson))
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -33,6 +32,9 @@ num_burn <- strtoi(args[7])
 # num_iters <- 2e6
 # num_burn <- 1.1e6
 
+# maximum PSRF
+max_psrf <- 1.2
+
 # load any custom burn in values
 burn_file <- paste0(prefix, '-burnin.csv')
 if (file.exists(burn_file)) {
@@ -42,7 +44,6 @@ if (file.exists(burn_file)) {
 
 # load the Dstat data
 dstats <- read.csv(dstats_file)
-dstats.pos <- dstats[dstats$D >= 0,] # drop negative results (because they are symetrical)
 
 # Convert qpGraph model to R format
 convert_qpgraph <- function(graph_file) {
@@ -86,15 +87,15 @@ graph <- convert_qpgraph(paste0(prefix, "/graphs/", prefix, "-", graph_code, ".g
 # plot the graph
 pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-graph.pdf'))
 plot(graph, show_admixture_labels = TRUE)
-off <- dev.off()
+dev.off()
 
 # plot the D-stats
 pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-dstat.pdf'))
-plot(f4stats(dstats.pos))
-off <- dev.off()
+plot(f4stats(dstats))
+dev.off()
 
 # fit the graph
-graph_fit <- fit_graph(dstats.pos, graph)
+graph_fit <- fit_graph(dstats, graph)
 
 cat("Summary of graph fit...\n")
 cat(summary(graph_fit))
@@ -103,7 +104,7 @@ cat("\n")
 # plot the fit
 pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-fit.pdf'))
 plot(graph_fit)
-off <- dev.off()
+dev.off()
 
 # setup the MCMC model
 mcmc <- make_mcmc_model(graph, dstats)
@@ -219,21 +220,20 @@ for (i in 1:num_chains) {
     cat("Plotting ESS vs. burn-in.", "\n\n")
     pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-ess-burn-', i, '.pdf'), width=21, height=14)
     plotESSBurn(mcmc.chain, step.size=round(num_burn/2, 0))
-    off <- dev.off()
+    dev.off()
 
     cat("Plotting thinned autocorrelation.\n\n")
     pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-thin-autocorr-', i, '.pdf'))
     autocorr.plot(thinning(mcmc.burn, k=1000), lag.max=50)
-    off <- dev.off()
+    dev.off()
 
     cat("Plotting the trace.\n\n")
-    # pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-', i, '.pdf'))
     png(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-', i, '-pt%d.png'), width=7, height=7, units='in', res=300)
     plot(mcmc.burn)
-    off <- dev.off()
+    dev.off()
 
-    # add the burned-in chain to the list
-    chains[[i]] <- mcmc.burn
+    # add the burned-in chain to the list (and drop posterior)
+    chains[[i]] <- mcmc.burn[ , -which(colnames(mcmc.burn) %in% c("posterior"))]
 }
 
 cat("\n\n", "--------------", "\n\n")
@@ -241,32 +241,57 @@ cat("Analysing combined chains.", "\n\n")
 
 chains.all <- mcmc.list(chains)
 
-# print the summary stats
-print(summary(chains.all))
+# calculate the summary stats
+chains.summary <- summary(chains.all)
+print(chains.summary)
+write.table(chains.summary$quantiles, file = paste0(prefix, "/bayes/", prefix, "-", graph_code, '-chainAll-summary.tsv'), sep = "\t")
+
+# calculate the ESS for all params across all the replicates
+ess <- effectiveSize(chains.all)
+cat(toJSON(ess, indent = 2), file = paste0(prefix, "/bayes/", prefix, "-", graph_code, '-chainAll-ess.json'))
 
 cat("Effective Sample Size.\n")
-print(effectiveSize(chains.all))
+print(ess)
 cat("\n")
 
 # plot the combined traces
 cat("Plotting combined traces.", "\n\n")
-# pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-0.pdf'))
 png(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-trace-0-pt%d.png'), width=7, height=7, units='in', res=300)
 plot(chains.all)
-off <- dev.off()
+dev.off()
 
-cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
-pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-gelman.pdf'))
-gelman.plot(chains.all)
-off <- dev.off()
+gelman <- tryCatch({
+    # NB. values substantially above 1 indicate lack of convergence.
+    gelman.diag(chains.all, multivariate = TRUE, autoburnin = FALSE)
+}, error = function(e) {
+    # not all models can compute a value multivariate PSRF
+    gelman.diag(chains.all, multivariate = FALSE, autoburnin = FALSE)
+})
 
-# NB. values substantially above 1 indicate lack of convergence.
-gelman <- gelman.diag(chains.all, multivariate=FALSE, autoburnin=FALSE)
+gelman.list <- gelman$psrf[, 1]
+gelman.list['mpsrf'] <- if (is.null(gelman$mpsrf)) NA else gelman$mpsrf
+cat(toJSON(gelman.list, indent = 2), file = paste0(prefix, "/bayes/", prefix, "-", graph_code, '-chainAll-psrf.json'))
 
 cat("Gelman and Rubin's convergence diagnostic.", "\n")
 print(gelman)
 
-if (gelman$psrf['likelihood', 1] > 1.1) {
-    cat(paste0("WARNING: PSRF of likelihood above threshold = ", round(gelman$psrf['likelihood', 1], 3),
-                   " ./", prefix, "/bayes/", prefix, '-', graph_code))
+if (!is.na(gelman$mpsrf)) {
+  if (gelman$mpsrf > max_psrf) {
+    cat(paste0("WARNING: MPSRF of model is above threshold = ", round(gelman$mpsrf, 3)), "\n")
+  }
+} else if (gelman$psrf['lnL', 1] > max_psrf) {
+    cat(paste0("WARNING: PSRF of likelihood is above threshold = ", round(gelman$psrf['lnL', 1], 3)), "\n")
 }
+
+# do any params have infinite variance (very bad!)
+inf.params <- names(gelman$psrf[, 1][gelman$psrf[, 1] == 'Inf'])
+
+if (length(inf.params) > 0) {
+    # drop the offending columns so we can print the Gelman plot
+    chains.all <- chains.all[, !(colnames(chains.all[[1]]) %in% inf.params)]
+}
+
+cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
+png(file = str_replace(gelman_png, 'pt1', 'pt%d'), width = 7, height = 7, units = 'in', res = 300)
+gelman.plot(chains.all)
+dev.off()

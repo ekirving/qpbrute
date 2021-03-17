@@ -24,6 +24,7 @@ dependencies:
   - r-optimsimplex=1.0_7
   - r-raster=3.3_13
   - r-reshape2=1.4.4
+  - r-rjson=0.2.20
   - r-scales=1.1.1
   - r-stringr=1.4.0
   - r-viridis=0.5.1
