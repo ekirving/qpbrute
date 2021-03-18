@@ -8,7 +8,7 @@ with open("requirements.txt") as f:
 
 setuptools.setup(
     name="qpbrute",
-    version="0.2",
+    version="0.3",
     author="Evan K. Irving-Pease",
     author_email="evan.irvingpease@gmail.com",
     description="Heuristic algorithm for automatically fitting admixture graphs",
