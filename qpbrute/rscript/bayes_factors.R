@@ -99,7 +99,7 @@ if (num_chains >= 2) {
     write.csv(mtx, file=paste0(prefix, "/bayes/", prefix, "-bayes-factors.csv"))
     
     # convert the matrix into the 3-column format required by geom_tile
-    melted_mtx <- melt(mtx)
+    melted_mtx <- reshape2::melt(mtx)
 
     # we consider K > 150 to be very strong statistical support, so cap at that threshold
     # see https://en.wikipedia.org/wiki/Bayes_factor#Interpretation
@@ -109,16 +109,18 @@ if (num_chains >= 2) {
     melted_mtx$Var1 <- factor(melted_mtx$Var1, levels=rev(names(chains)))
     melted_mtx$Var2 <- factor(melted_mtx$Var2, levels=names(chains))
 
+    plt <- ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
+      geom_tile() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1),
+            axis.title.x = element_blank(),
+            axis.title.y = element_blank(),
+            legend.text.align = 1) +
+      scale_fill_viridis(name = "K", na.value = 'gainsboro', option='viridis')
+      # rescale the color palette so the zero threshold is obvious
+      # values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
+  
     # plot the heatmap
     pdf(file=paste0(prefix, "/bayes/", prefix, "-heatmap.pdf"), width=9, height=7)
-    ggplot(data = melted_mtx, aes(x=Var2, y=Var1, fill=value)) +
-        geom_tile() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1),
-              axis.title.x = element_blank(),
-              axis.title.y = element_blank(),
-              legend.text.align = 1) +
-        scale_fill_viridis(name = "K", na.value = 'gainsboro', option='viridis')
-        # rescale the color palette so the zero threshold is obvious
-        # values=rescale(c(-1, 0-.Machine$double.eps, 0, 0+.Machine$double.eps,1)))
+    print(plt)
     dev.off()
 }
