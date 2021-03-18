@@ -5,9 +5,7 @@
 # Email:     evan.irvingpease@gmail.com
 # License:   MIT
 
-quiet <- function(x) {
-  suppressMessages(suppressWarnings(x))
-}
+quiet <- function(x) { suppressMessages(suppressWarnings(x)) }
 quiet(library(admixturegraph))
 quiet(library(gtools))
 quiet(library(stringr))
@@ -17,6 +15,7 @@ quiet(library(viridis))
 quiet(library(scales))
 quiet(library(raster))
 quiet(library(data.table))
+quiet(library(rjson))
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -34,7 +33,7 @@ if (file.exists(burn_over)) {
     burn <- read.csv(burn_over, row.names = 1, col.names = c('', 'burn'), header = F)
 }
 
-# load all the thinned chains
+# load all the MCMC chains
 mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d).csv")
 mcmc.files <- list.files(path=paste0(prefix, "/bayes"), pattern=mcmc.regex, full.names=TRUE)
 names(mcmc.files) <- str_match(mcmc.files, mcmc.regex)[,2]
@@ -57,8 +56,16 @@ remove(chains.all)
 
 cat("Computing the likelihoods for all models.", "\n")
 ll <- data.frame()
-for (graph in graphs) {
-    ll <- rbind(ll, model_likelihood_n(chains[[graph]][,'likelihood'], 100))
+for (graph_code in graphs) {
+  # get the likelihood
+  likelihood <- model_likelihood_n(chains[[graph_code]][,'likelihood'], 100)
+  
+  # get the PSRF scores
+  psrf <- data.frame(fromJSON(file = paste0(prefix, "/bayes/", prefix, "-", graph_code, '-chainAll-psrf.json')))
+  names(psrf) <- paste0(ifelse(names(psrf) != "mpsrf", "psrf_", ""), names(psrf))
+  
+  # merge into a dataframe
+  ll <- rbind(ll, cbind(likelihood, psrf))
 }
 rownames(ll) <- graphs
 
@@ -88,6 +95,9 @@ if (num_chains >= 2) {
         mtx[x,y] <- K[,'mean']
     }
 
+    # save the Bayes factors
+    write.csv(mtx, file=paste0(prefix, "/bayes/", prefix, "-bayes-factors.csv"))
+    
     # convert the matrix into the 3-column format required by geom_tile
     melted_mtx <- melt(mtx)
 
