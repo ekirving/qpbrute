@@ -94,8 +94,20 @@ pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-dstat.pdf'))
 plot(f4stats(dstats))
 dev.off()
 
+# number of inner nodes
+n <- length(graph$inner_nodes)
+
 # fit the graph
-graph_fit <- fit_graph(dstats, graph)
+graph_fit <- fit_graph(
+  dstats, 
+  graph, 
+  # allow some extra time to find the best fit
+  optimisation_options = neldermead::optimset(
+    method='fminbnd', 
+    MaxFunEvals=400*n, 
+    MaxIter=400*n
+  )
+)
 
 cat("Summary of graph fit...\n")
 cat(summary(graph_fit))
