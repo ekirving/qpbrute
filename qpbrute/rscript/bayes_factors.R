@@ -124,3 +124,5 @@ if (num_chains >= 2) {
     print(plt)
     dev.off()
 }
+
+cat("FINISHED!")

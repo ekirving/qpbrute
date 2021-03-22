@@ -307,3 +307,5 @@ cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
 png(file = str_replace(gelman_png, 'pt1', 'pt%d'), width = 7, height = 7, units = 'in', res = 300)
 gelman.plot(chains.all)
 dev.off()
+
+cat("FINISHED!")
