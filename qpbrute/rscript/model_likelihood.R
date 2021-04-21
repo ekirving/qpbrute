@@ -11,6 +11,7 @@ quiet(library(coda))
 quiet(library(fitR))
 quiet(library(data.table))
 quiet(library(rjson))
+quiet(library(stringr))
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
