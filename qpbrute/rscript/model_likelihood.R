@@ -305,7 +305,7 @@ if (length(inf.params) > 0) {
 }
 
 cat("Plotting the Gelman and Rubin's convergence diagnostic.", "\n\n")
-png(file = str_replace(gelman_png, 'pt1', 'pt%d'), width = 7, height = 7, units = 'in', res = 300)
+pdf(file=paste0(prefix, "/bayes/", prefix, "-", graph_code, '-burn-gelman.pdf'), width = 7, height = 7, units = 'in', res = 300)
 gelman.plot(chains.all)
 dev.off()
 
