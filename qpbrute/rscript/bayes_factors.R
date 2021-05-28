@@ -16,6 +16,7 @@ quiet(library(scales))
 quiet(library(raster))
 quiet(library(data.table))
 quiet(library(rjson))
+quiet(library(dplyr))
 
 # get the command line arguments
 args <- commandArgs(trailingOnly = TRUE)
@@ -65,7 +66,7 @@ for (graph_code in graphs) {
   names(psrf) <- paste0(ifelse(names(psrf) != "mpsrf", "psrf_", ""), names(psrf))
   
   # merge into a dataframe
-  ll <- rbind(ll, cbind(likelihood, psrf))
+  ll <- dplyr::bind_rows(ll, cbind(likelihood, psrf))
 }
 rownames(ll) <- graphs
 
