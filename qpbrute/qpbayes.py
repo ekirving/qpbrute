@@ -235,7 +235,7 @@ class QPBayes:
                 "Rscript",
                 f"{self.code_dir}/rscript/bayes_factors.R",
                 self.prefix,
-                MCMC_NUM_BURN,
+                self.mcmc_burn,
             ],
             stdout=open(log_file, "w"),
         )
