@@ -35,7 +35,7 @@ if (file.exists(burn_over)) {
 }
 
 # load all the MCMC chains
-mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d).csv")
+mcmc.regex <- paste0(prefix, "-(.+)-chain-(\\d+).csv")
 mcmc.files <- list.files(path=paste0(prefix, "/bayes"), pattern=mcmc.regex, full.names=TRUE)
 names(mcmc.files) <- str_match(mcmc.files, mcmc.regex)[,2]
 graphs <- unique(names(mcmc.files))
