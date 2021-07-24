@@ -187,6 +187,9 @@ class QPBayes:
             )
         )
 
+        if len(self.graphs) == 0:
+            sys.exit()
+
         if self.threads > 1:
             # compute the model likelihoods
             pool = mp.ProcessingPool(self.threads)
@@ -276,7 +279,7 @@ def calculate_bayes_factors(
         threads,
     )
 
-    if burnin >= iterations:
+    if qpb.mcmc_burn >= qpb.mcmc_iters:
         raise RuntimeError(
             "ERROR: MCMC burn in must be less than the number of iterations"
         )
