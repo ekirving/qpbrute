@@ -75,7 +75,7 @@ Alternatively, you can install all the dependencies manually via pip and CRAN.
 Python ≥ 3.6 and pip:
 
 ```bash
-pip install https://github.com/ekirving/qpbrute.git
+pip install git+https://github.com/ekirving/qpbrute.git
 ```
 
 The full list of Python modules installed in the project environment can be
